@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
+#include <io.h>//for Linux, changing for <unistd.h>
 
 #include "SFD_Muxer_Error.h"
 #include "MPEG_block_print.h"
@@ -48,9 +50,9 @@ int main(int argc, char *argv[])
     unsigned int ac3_num = 0;
     char *ac3_file[32];
     unsigned int output_num = 0;
-    char *output_file;
+    char *output_file = 0;
     unsigned int SFD_style_num = 0;
-    char *SFD_style_file;
+    char *SFD_style_file = 0;
     unsigned int sofdec_version_num = 0;
     unsigned int sofdec_version = 1;
     unsigned int default_overwrite_flag = 0;
@@ -83,8 +85,9 @@ int main(int argc, char *argv[])
     unsigned int last_picture_start = 0;
     unsigned long long int PTS_cache;
 
+
     //read from terminal
-    for (i = 1; i < argc; i = i + 2)
+    for (i = 1; (i + 1) < argc; i = i + 2)
     {
         if      (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "-V") == 0)
         {
@@ -129,7 +132,7 @@ int main(int argc, char *argv[])
             else if(strcmp(argv[i+1], "c") == 0 || strcmp(argv[i+1], "C") == 0)
                 ansi_codepage = 936;
             else
-                printf("Warning: Language parameter isn't conformed to constraint conditions. The interface language is still in use English.");
+                printf("Warning: Language parameter isn't conformed to constraint conditions. The interface language is still in use English.\n");
         }
         else
             error(001, argv[i], ansi_codepage);
@@ -309,7 +312,7 @@ int main(int argc, char *argv[])
     }
 
     //overwrite?
-    j = access(output_file, 00);
+    j = _access(output_file, 00);//for linus, changing for access(output_file, 00);
     if (j == 0 && default_overwrite_flag == 0)
         overwrite_question(output_file, ansi_codepage);
 

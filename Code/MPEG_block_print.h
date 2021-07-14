@@ -75,7 +75,7 @@ void STD_buffer_block_print(FILE *out_file, int STD_buffer_scale, unsigned int S
 }
 void PTS_DTS_block_print(FILE *out_file, char TS_mark, unsigned long long xTS)
 {
-    unsigned long long int a, b, c, d, e;
+    unsigned long long int a = 0, b, c, d, e;
     if (TS_mark == 0x01)
         a = (xTS >> 29) | 0x11;
     else if (TS_mark == 0x02)

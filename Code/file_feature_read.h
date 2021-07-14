@@ -50,23 +50,25 @@ unsigned long int sample_rate_read(unsigned int i, unsigned int j, unsigned int 
 float DTS_basic_read(int i)
 {
     int picture_rate = i & 0x0F;
-    float DTS_basic;
+    float DTS_basic = 0;
     if (picture_rate == 0x01)
         DTS_basic = 3753.75;
-    else if (picture_rate = 0x02)
+    else if (picture_rate == 0x02)
         DTS_basic = 3750;
-    else if (picture_rate = 0x03)
+    else if (picture_rate == 0x03)
         DTS_basic = 3600;
-    else if (picture_rate = 0x04)
+    else if (picture_rate == 0x04)
         DTS_basic = 3003;
-    else if (picture_rate = 0x05)
+    else if (picture_rate == 0x05)
         DTS_basic = 3000;
-    else if (picture_rate = 0x06)
+    else if (picture_rate == 0x06)
         DTS_basic = 1800;
-    else if (picture_rate = 0x07)
+    else if (picture_rate == 0x07)
         DTS_basic = 1501.5;
-    else if (picture_rate = 0x08)
+    else if (picture_rate == 0x08)
         DTS_basic = 1500;
+    else
+        ;
     return DTS_basic;
 }
 unsigned int temporal_reference_read(unsigned int i, unsigned int j)
