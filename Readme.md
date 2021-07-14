@@ -18,7 +18,9 @@ CRI Sofdec文件格式（典型扩展名为SFD）是CRI Middleware公司所开�
 
 ## How to Use
 Usage:
-    `SFD_Muxer [-v [video]]… [-a [audio]]… [-o [output]] (-y) (-sfd [sample sfd]) (-s [sofdec stream verson]) (-as [audio offset]) (-l [language])`
+
+    SFD_Muxer [-v [video]]… [-a [audio]]… [-o [output]] (-y) (-sfd [sample sfd]) (-s [sofdec stream verson]) (-as [audio offset]) (-l [language])
+
 Option:
 
     -v:   input video filename(mpeg-1 video, less than 16)  
@@ -33,11 +35,14 @@ Option:
           The code is writing in UTF-8, so must using "chcp 65001" to change terminal codepage when using chinese in windows.
 
 Sample:
-    `SFD_Muxer -v AT_OP0D.m1v -a AT_OP0D.sfa -a AT_OP0D.ac3 -o AT_OP0D.sfd`
+
+    SFD_Muxer -v AT_OP0D.m1v -a AT_OP0D.sfa -a AT_OP0D.ac3 -o AT_OP0D.sfd
 
 #### 使用方法
 命令:
-    `SFD_Muxer [-v [video]]… [-a [audio]]… [-o [output]] (-y) (-sfd [sample sfd]) (-s [sofdec stream verson]) (-as [audio offset]) (-l [language])`
+
+    SFD_Muxer [-v [video]]… [-a [audio]]… [-o [output]] (-y) (-sfd [sample sfd]) (-s [sofdec stream verson]) (-as [audio offset]) (-l [language])
+
 说明:
 
     -v:   视频输入流(mpeg-1 video, 不得超过16个)
@@ -52,7 +57,8 @@ Sample:
           由于源码基于UTF-8，在Windows下使用中文模式时需要先执行"chcp 65001"将终端转换为UTF-8代码页。
 
 示例:
-    `SFD_Muxer -v AT_OP0D.m1v -a AT_OP0D.sfa -a AT_OP0D.ac3 -o AT_OP0D.sfd`
+
+    SFD_Muxer -v AT_OP0D.m1v -a AT_OP0D.sfa -a AT_OP0D.ac3 -o AT_OP0D.sfd
 
 
 ## TODO:
