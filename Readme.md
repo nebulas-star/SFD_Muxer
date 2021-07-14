@@ -1,20 +1,24 @@
-#SFD Muxer
+# SFD Muxer
 
 Open source CRI Sofdec Muxer.
-¿ªÔ´µÄCRI Sofdec»ìÁ÷Æ÷¡£
 
-##Introduction
+å¼€æºçš„CRI Sofdecæ··æµå™¨ã€‚
+
+## Introduction
 CRI Sofdec file format (SFD) is a type of video middleware format which developed by CRI Middleware Co., Ltd.
+
 Now(2021), CRI Middleware has stopped supporting this format.
+
 This tool is built as a limited alternative to CRI Sofdec SDK, used for made community localization or community DLC for some classic video games.
 
-####¼ò½é
-CRI SofdecÎÄ¼ş¸ñÊ½£¨µäĞÍÀ©Õ¹ÃûÎªSFD£©ÊÇCRI Middleware¹«Ë¾Ëù¿ª·¢µÄÓÎÏ·ÓÃÊÓÆµÖĞ¼ä¼ş¸ñÊ½£¬µ±Ç°CRI MiddlewareÒÑÍ£Ö¹Ö§³Ö¸Ã¸ñÊ½¡£
-±¾¹¤¾ßÖ¼ÔÚÌá¹©CRI Sofdec SDKµÄÓĞÏŞÌæ´úÆ·¹©¾­µäÊÓÆµÓÎÏ·µÄÉçÇø±¾µØ»¯»òÉçÇøDLCÖÆ×÷Ê¹ÓÃ¡£
+#### ç®€ä»‹
+CRI Sofdecæ–‡ä»¶æ ¼å¼ï¼ˆå…¸å‹æ‰©å±•åä¸ºSFDï¼‰æ˜¯CRI Middlewareå…¬å¸æ‰€å¼€å‘çš„æ¸¸æˆç”¨è§†é¢‘ä¸­é—´ä»¶æ ¼å¼ï¼Œå½“å‰CRI Middlewareå·²åœæ­¢æ”¯æŒè¯¥æ ¼å¼ã€‚
 
-##How to Use
+æœ¬å·¥å…·æ—¨åœ¨æä¾›CRI Sofdec SDKçš„æœ‰é™æ›¿ä»£å“ä¾›ç»å…¸è§†é¢‘æ¸¸æˆçš„ç¤¾åŒºæœ¬åœ°åŒ–æˆ–ç¤¾åŒºDLCåˆ¶ä½œä½¿ç”¨ã€‚
+
+## How to Use
 Usage:
-    `SFD_Muxer [-v [video]]¡­ [-a [audio]]¡­ [-o [output]] (-y) (-sfd [sample sfd]) (-s [sofdec stream verson]) (-as [audio offset]) (-l [language])`
+    `SFD_Muxer [-v [video]]â€¦ [-a [audio]]â€¦ [-o [output]] (-y) (-sfd [sample sfd]) (-s [sofdec stream verson]) (-as [audio offset]) (-l [language])`
 Option:
 
     -v:   input video filename(mpeg-1 video, less than 16)  
@@ -31,30 +35,30 @@ Option:
 Sample:
     `SFD_Muxer -v AT_OP0D.m1v -a AT_OP0D.sfa -a AT_OP0D.ac3 -o AT_OP0D.sfd`
 
-####Ê¹ÓÃ·½·¨
-ÃüÁî:
-    `SFD_Muxer [-v [video]]¡­ [-a [audio]]¡­ [-o [output]] (-y) (-sfd [sample sfd]) (-s [sofdec stream verson]) (-as [audio offset]) (-l [language])`
-ËµÃ÷:
+#### ä½¿ç”¨æ–¹æ³•
+å‘½ä»¤:
+    `SFD_Muxer [-v [video]]â€¦ [-a [audio]]â€¦ [-o [output]] (-y) (-sfd [sample sfd]) (-s [sofdec stream verson]) (-as [audio offset]) (-l [language])`
+è¯´æ˜:
 
-    -v:   ÊÓÆµÊäÈëÁ÷(mpeg-1 video, ²»µÃ³¬¹ı16¸ö)
-    -a:   ÒôÆµÊä³öÁ÷(SFA/AC-3(Dolby Digital, DD) audio, ²»µÃ³¬¹ı32¸ö)
-    -o:   Êä³öÎÄ¼şÃû¡£
-    -y:   Ä¬ÈÏ¸²¸ÇÊä³ö¡£
-    -sfd: Ñù±¾SFDÎÄ¼ş¡£Ìá¹©Êä³öÎÄ¼ş²ÎÊı¡£ÈôÊ¹ÓÃ´Ë²ÎÊı£¬ÔòËùÓĞ"-s"Óë"-as"²ÎÊıÎŞĞ§¡£
-    -s:   SofdecĞÅÏ¢Á÷°æ±¾¡£ÒÔASCIIÖ¸Ê¾ÓÚÎÄ¼şÖĞµÚÒ»¸öË½ÓÃÁ÷°üµÄÆ«Ö·0x2C´¦¡£
-    -as:  ÒôÆµÁ÷ÆğÊ¼Æ«Ö·¡£
-          ¸Ã²ÎÊıÖ¸Ê¾ÁËÊä³öÎÄ¼şÖĞµÚÒ»¸öÒôÆµÁ÷µÄ"stream_ID"¡£
-    -l:   ÏÔÊ¾ÓïÑÔ¡£ (e = Ó¢Óï[default], c= ÖĞÎÄ)
-          ÓÉÓÚÔ´Âë»ùÓÚUTF-8£¬ÔÚWindowsÏÂÊ¹ÓÃÖĞÎÄÄ£Ê½Ê±ĞèÒªÏÈÖ´ĞĞ"chcp 65001"½«ÖÕ¶Ë×ª»»ÎªUTF-8´úÂëÒ³¡£
+    -v:   è§†é¢‘è¾“å…¥æµ(mpeg-1 video, ä¸å¾—è¶…è¿‡16ä¸ª)
+    -a:   éŸ³é¢‘è¾“å‡ºæµ(SFA/AC-3(Dolby Digital, DD) audio, ä¸å¾—è¶…è¿‡32ä¸ª)
+    -o:   è¾“å‡ºæ–‡ä»¶åã€‚
+    -y:   é»˜è®¤è¦†ç›–è¾“å‡ºã€‚
+    -sfd: æ ·æœ¬SFDæ–‡ä»¶ã€‚æä¾›è¾“å‡ºæ–‡ä»¶å‚æ•°ã€‚è‹¥ä½¿ç”¨æ­¤å‚æ•°ï¼Œåˆ™æ‰€æœ‰"-s"ä¸"-as"å‚æ•°æ— æ•ˆã€‚
+    -s:   Sofdecä¿¡æ¯æµç‰ˆæœ¬ã€‚ä»¥ASCIIæŒ‡ç¤ºäºæ–‡ä»¶ä¸­ç¬¬ä¸€ä¸ªç§ç”¨æµåŒ…çš„åå€0x2Cå¤„ã€‚
+    -as:  éŸ³é¢‘æµèµ·å§‹åå€ã€‚
+          è¯¥å‚æ•°æŒ‡ç¤ºäº†è¾“å‡ºæ–‡ä»¶ä¸­ç¬¬ä¸€ä¸ªéŸ³é¢‘æµçš„"stream_ID"ã€‚
+    -l:   æ˜¾ç¤ºè¯­è¨€ã€‚ (e = è‹±è¯­[default], c= ä¸­æ–‡)
+          ç”±äºæºç åŸºäºUTF-8ï¼Œåœ¨Windowsä¸‹ä½¿ç”¨ä¸­æ–‡æ¨¡å¼æ—¶éœ€è¦å…ˆæ‰§è¡Œ"chcp 65001"å°†ç»ˆç«¯è½¬æ¢ä¸ºUTF-8ä»£ç é¡µã€‚
 
-Ê¾Àı:
+ç¤ºä¾‹:
     `SFD_Muxer -v AT_OP0D.m1v -a AT_OP0D.sfa -a AT_OP0D.ac3 -o AT_OP0D.sfd`
 
 
-##TODO:
-MPEG-2 video support
-AIX audio surropt
+## TODO:
+    MPEG-2 video support
+    AIX audio surropt
 
-####´ıÊµÏÖ:
-MPEG-2ÊÓÆµÖ§³Ö
-AIXÒôÆµÖ§³Ö
+#### å¾…å®ç°:
+    MPEG-2è§†é¢‘æ”¯æŒ
+    AIXéŸ³é¢‘æ”¯æŒ
