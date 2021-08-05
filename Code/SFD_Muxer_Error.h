@@ -37,6 +37,8 @@ void error(int error_code, char *error_file, int ansi_codepage)
             printf("ERROR 110: The specified audio stream \"%s\" is not an SFA/AIX/AC-3 audio stream.", error_file);
         else if (error_code == 111)
             printf("ERROR 111: The specified SFA stream \"%s\" isn't conformed to constraint conditions.", error_file);
+        else if (error_code == 112)
+            printf("ERROR 112: The specified AIX stream \"%s\" isn't conformed to constraint conditions.", error_file);
         else if (error_code == 120)
             printf("ERROR 120: The specified sample Sofdec file \"%s\" isn't conformed to constraint conditions.", error_file);
         else if (error_code == 200)
@@ -92,6 +94,8 @@ void error(int error_code, char *error_file, int ansi_codepage)
             printf("ERROR 110: 指定的音频流\"%s\"不是合法的SFA/AIX/AC-3音频流。", error_file);
         else if (error_code == 111)
             printf("ERROR 111: 指定的SFA流\"%s\"不合法。", error_file);
+        else if (error_code == 112)
+            printf("ERROR 112: 指定的AIX流\"%s\"不符合约束。", error_file);
         else if (error_code == 120)
             printf("ERROR 120: 指定的SFD样本流\"%s\"不合法。", error_file);
         else if (error_code == 200)

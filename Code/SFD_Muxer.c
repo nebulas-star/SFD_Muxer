@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
     unsigned int sfa_DTS_basic[32];
     unsigned int aix_num = 0;
     char *aix_file[32];
+    unsigned int aix_DTS_basic[32];
     unsigned int ac3_num = 0;
     char *ac3_file[32];
     unsigned int output_num = 0;
@@ -215,7 +216,19 @@ int main(int argc, char *argv[])
         }
         else if (file_style_cache[0] == 0x41 && file_style_cache[1] == 0x49 
                                              && file_style_cache[2] == 0x58 && file_style_cache[3] == 0x46)
-            error(902, 0, ansi_codepage);//Now can't mux AIX Video.
+        {
+            if (file_style_cache[0x19]   == 0x01 && file_style_cache[0x40]   == 0x03 &&
+                file_style_cache[0x17FA] == 0x28 && file_style_cache[0x17FB] == 0x63 && file_style_cache[0x17FC] == 0x29
+                                                 && file_style_cache[0x17FD] == 0x43 && file_style_cache[0x17FE] == 0x52
+                                                                                     && file_style_cache[0x17FF] == 0x49 &&
+                file_style_cache[0x4C]   == 0x02 && file_style_cache[0x54]   == 0x02 && file_style_cache[0x5C]   == 0x02     )
+            {
+                aix_file[aix_num] = audio_file[i];
+                aix_num++;
+            }
+            else
+                error(112, audio_file[i], ansi_codepage);
+        }
         else
             error(110, audio_file[i], ansi_codepage);
         fclose(input_cache);
@@ -287,10 +300,21 @@ int main(int argc, char *argv[])
                 mux_rate = mux_rate + sfa_rate_made(j, k, ansi_codepage);
                 fclose(input_cache);
             }
+        if (aix_num != 0)
+            for (i = 0; i < aix_num; i++)
+            {
+                input_cache = fopen(aix_file[i], "rb");
+                fread(file_style_cache, 1, 0x20, input_cache);
+                j = sample_rate_read(file_style_cache[0x48], file_style_cache[0x49], file_style_cache[0x4A],
+                                                                                     file_style_cache[0x4B]);
+                k = file_style_cache[0x4C];
+                mux_rate = mux_rate + (3 * sfa_rate_made(j, k, ansi_codepage));
+                fclose(input_cache);
+            }
         if (mux_rate >= 0x3FFFFF)
             error(200, 0, ansi_codepage);
     }
-    
+
     //calculate DTS basic
     if (sfa_num != 0)
         for (i = 0; i < sfa_num; i++)
@@ -303,6 +327,17 @@ int main(int argc, char *argv[])
             sfa_DTS_basic[i] = (322560000 / (j * k));
             fclose(input_cache);
         }
+    if (aix_num != 0)
+        for (i = 0; i < aix_num; i++)
+        {
+            input_cache = fopen(aix_file[i], "rb");
+            fread(file_style_cache, 1, 0x50, input_cache);
+            j = sample_rate_read(file_style_cache[0x48], file_style_cache[0x49], file_style_cache[0x4A],
+                                                                                 file_style_cache[0x4B]);
+            k = file_style_cache[0x4C];
+            aix_DTS_basic[i] = (322560000 / (j * k * 3));
+            fclose(input_cache);
+        }
     for (i = 0; i < m1v_num; i++)
     {
         input_cache = fopen(m1v_file[i], "rb");
@@ -312,7 +347,7 @@ int main(int argc, char *argv[])
     }
 
     //overwrite?
-    j = _access(output_file, 00);//for linus, changing for access(output_file, 00);
+    j = _access(output_file, 00);//for linus, changing for "access(output_file, 00);"
     if (j == 0 && default_overwrite_flag == 0)
         overwrite_question(output_file, ansi_codepage);
 
@@ -332,6 +367,24 @@ int main(int argc, char *argv[])
     SCR_flag++;
     pack_head_print(output, SCR_flag, mux_rate, ansi_codepage);
     sofdec_stream_message_block(output, sofdec_version);
+    if (aix_num != 0 && sofdec_version == 2)
+    {
+        sofdec_padding_block_print(output, 0x140);
+        sofdec_padding_block_print(output, ((sfa_num + audio_ID_start_offset) * 0x10));
+        char aix_block[0x10] = {0xC0, 0x23, 0x60, 0xBB, 0X80};
+        for (i = 0; i < aix_num; i++)
+        {
+            aix_block[0] = 0xC0 + i + audio_ID_start_offset;
+            input_cache = fopen(aix_file[i], "rb");
+            fread(file_style_cache, 1, 0x50, input_cache);
+            aix_block[3] = file_style_cache[0x4A];
+            aix_block[4] = file_style_cache[0x4B];
+            fwrite(aix_block, 1, 0x10, output);
+        }
+        sofdec_padding_block_print(output, 0x640 - (sfa_num + aix_num + audio_ID_start_offset) * 0x10);
+    }
+    else
+        sofdec_padding_block_print(output, 0x780);
     SCR_flag++;
 
     i = 0;
@@ -341,6 +394,13 @@ int main(int argc, char *argv[])
         inputs[i] = fopen(sfa_file[i - j], "rb");
         DTS_flag[i] = 0x01;
         DTS_basic[i] = sfa_DTS_basic[i - j];
+    }
+    j = i;
+    for (; i < (aix_num + j); i++)
+    {
+        inputs[i] = fopen(aix_file[i - j], "rb");
+        DTS_flag[i] = 0x01;
+        DTS_basic[i] = aix_DTS_basic[i - j];
     }
     j = i;
     for (; i < (ac3_num + j); i++)
@@ -413,7 +473,6 @@ int main(int argc, char *argv[])
                         picture_coding_type = picture_coding_type_read(file_style_cache[l + 5]);
                         temporal_reference = temporal_reference_read(file_style_cache[l + 4], file_style_cache[l + 5]);
                         PTS_cache = ((picture_num_basic[j]) + temporal_reference) * DTS_basic[j];
-
                         if (picture_coding_type == 0x01 || picture_coding_type == 0x02)
                             packet_head_print(output, (0xE0 + j - audio_num), (k + 0x0C), 0, 1, 0x2E, 1, PTS_cache, DTS_forecast[j]);
                         if (picture_coding_type == 0x03)
