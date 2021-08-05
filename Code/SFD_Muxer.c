@@ -341,7 +341,7 @@ int main(int argc, char *argv[])
     for (i = 0; i < m1v_num; i++)
     {
         input_cache = fopen(m1v_file[i], "rb");
-        fread(file_style_cache, 1, 0x07, input_cache);
+        fread(file_style_cache, 1, 0x10, input_cache);
         m1v_DTS_basic[i] = DTS_basic_read(file_style_cache[0x07]);
         fclose(input_cache);
     }

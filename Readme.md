@@ -24,8 +24,8 @@ Usage:
 Option:
 
     -v:   input video filename(mpeg-1 video, less than 16)  
-	-a:   input audio filename(SFA/AC-3(Dolby Digital, DD) audio, less than 32)
-	-o:   output filename.
+    -a:   input audio filename(SFA/AC-3(Dolby Digital, DD) audio, less than 32)
+    -o:   output filename.
     -y:   default overwrite output file.
     -sfd: sample Sofdec file. Build with this file's parameter. If using this parameter, "-s" and "-as" will be not use.
     -s:   Sofdec stream verson. In the first "private_stream_2" start address + 0x2C, write in ASCII.
