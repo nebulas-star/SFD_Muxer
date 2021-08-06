@@ -69,6 +69,7 @@ float DTS_basic_read(int i)
         DTS_basic = 1500;
     else
         ;
+    DTS_basic = DTS_basic + 15;
     return DTS_basic;
 }
 unsigned int temporal_reference_read(unsigned int i, unsigned int j)

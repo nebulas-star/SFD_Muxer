@@ -37,6 +37,8 @@ void error(int error_code, char *error_file, int ansi_codepage)
             printf("ERROR 110: The specified audio stream \"%s\" is not an SFA/AIX/AC-3 audio stream.", error_file);
         else if (error_code == 111)
             printf("ERROR 111: The specified SFA stream \"%s\" isn't conformed to constraint conditions.", error_file);
+        else if (error_code == 112)
+            printf("ERROR 112: The specified AIX stream \"%s\" isn't conformed to constraint conditions.", error_file);
         else if (error_code == 120)
             printf("ERROR 120: The specified sample Sofdec file \"%s\" isn't conformed to constraint conditions.", error_file);
         else if (error_code == 200)
@@ -53,8 +55,6 @@ void error(int error_code, char *error_file, int ansi_codepage)
             printf("ERROR 900: This feature has not yet been implemented.");
         else if (error_code == 901)
             printf("ERROR 901: The function of muxing MPEG-2 video streams has not yet been implemented.");
-        else if (error_code == 902)
-            printf("ERROR 902: The function of muxing AIX audio streams has not yet been implemented.");
         else if (error_code == 903)
             printf("ERROR 903: The parameters of the SFA audio stream are not in the predetermined parameter table.");
     }
@@ -92,6 +92,8 @@ void error(int error_code, char *error_file, int ansi_codepage)
             printf("ERROR 110: 指定的音频流\"%s\"不是合法的SFA/AIX/AC-3音频流。", error_file);
         else if (error_code == 111)
             printf("ERROR 111: 指定的SFA流\"%s\"不合法。", error_file);
+        else if (error_code == 112)
+            printf("ERROR 112: 指定的AIX流\"%s\"不符合约束。", error_file);
         else if (error_code == 120)
             printf("ERROR 120: 指定的SFD样本流\"%s\"不合法。", error_file);
         else if (error_code == 200)
@@ -108,8 +110,6 @@ void error(int error_code, char *error_file, int ansi_codepage)
             printf("ERROR 900: 功能尚未实现。");
         else if (error_code == 901)
             printf("ERROR 901: 混流MPEG-2视频流的功能暂未实现。");
-        else if (error_code == 902)
-            printf("ERROR 902: 混流AIX音频流的功能暂未实现。");
         else if (error_code == 903)
             printf("ERROR 903: 该SFA音频流的参数不在预先确定的参数表中。");
     }
