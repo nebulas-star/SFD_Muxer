@@ -40,7 +40,7 @@ Sample:
 
 2. What is Dobly Digital AIX？
 
-    Dobly Digital AIX is a tupe of CRI AIX file 。CRI AIX file is a type of Audio containers for multichannel adx.
+    Dobly Digital AIX is a type of CRI AIX file 。CRI AIX file is a type of Audio containers for multichannel adx.
 
     Dobly Digital AIX need conformed to constraint conditions below：
 
