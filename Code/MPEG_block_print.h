@@ -36,9 +36,9 @@ void SCR_block_print(FILE *out_file, unsigned long long int block_num, unsigned 
 void rate_block_print(FILE *out_file, unsigned long long int mux_rate)
 {
     unsigned long long int a, b, c;
-    a = (mux_rate >> 15) | 0x80;
-    b = (mux_rate >> 7) & 0xFF;
-    c = ((mux_rate << 1) & 0xFE) | 0x01;
+    a =  (mux_rate >> 15) | 0x80;
+    b =  (mux_rate >>  7) & 0xFF;
+    c = ((mux_rate <<  1) & 0xFE) | 0x01;
     char mux_rate_block[3] = {a, b, c};
     fwrite(mux_rate_block, 1, 3, out_file);
 }
