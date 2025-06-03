@@ -18,7 +18,7 @@ CRI Sofdec 文件格式（典型扩展名为SFD）是 CRI Middleware 公司所�
 
     -y:   默认覆盖输出。
     -v:   视频输入流 (mpeg-1 video, 不得超过16个)
-    -a:   音频输出流 (SFA/Dolby Digital AC-3/Dobly Digital AIX audio, 不得超过32个)
+    -a:   音频输入流 (SFA/Dolby Digital AC-3/Dobly Digital AIX audio, 不得超过32个)
     -o:   输出文件名。
     -sfd: 样本 SFD 文件。提供输出文件参数。若使用此参数，则所有 "-s" 与 "-as" 参数无效。
     -s:   Sofdec 信息流版本。以 ASCII 指示于文件中第一个私用流包的偏址 0x2C 处。
@@ -60,3 +60,5 @@ CRI Sofdec 文件格式（典型扩展名为SFD）是 CRI Middleware 公司所�
 ## 待实现:
     MPEG-2 视频支持
     更好的 SFA/AIX 音频支持
+    
+### [技术资料](https://nebulas-star.github.io/2022-06-12_CRI-Sofdec-%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%88%86%E6%9E%90/)
