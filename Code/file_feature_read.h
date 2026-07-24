@@ -74,7 +74,7 @@ float DTS_basic_read(int i)
 }
 unsigned int temporal_reference_read(unsigned int i, unsigned int j)
 {
-    unsigned int a = (i >> 6) | (j >> 6);
+    unsigned int a = ((i << 2) | (j >> 6)) & 0x3FF;
     return a;
 }
 unsigned int picture_coding_type_read(unsigned i)

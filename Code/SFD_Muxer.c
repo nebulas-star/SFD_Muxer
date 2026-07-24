@@ -73,12 +73,12 @@ int main(int argc, char *argv[])
     unsigned long long int SCR_flag;
 
     FILE *inputs[48];
-    char DTS_flag[48];
-    float DTS_basic[48];
-    unsigned long long int DTS_forecast[48];
-    unsigned long long int picture_num_basic[48];
-    unsigned long long int picture_num_current[48];
-    unsigned long int picture_num_bigest[48];
+    char DTS_flag[48] = {0};
+    float DTS_basic[48] = {0};
+    unsigned long long int DTS_forecast[48] = {0};
+    unsigned long long int picture_num_basic[48] = {0};
+    unsigned long long int picture_num_current[48] = {0};
+    unsigned long int picture_num_bigest[48] = {0};
     unsigned char picture_head[4] = {0x00, 0x00, 0x01, 0x00};
     unsigned int picture_coding_type;
     unsigned int temporal_reference;
