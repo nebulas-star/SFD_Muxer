@@ -372,7 +372,7 @@ int main(int argc, char *argv[])
     pack_head_print(output, SCR_flag, mux_rate, ansi_codepage);
     sofdec_stream_message_block(output, sofdec_version);
     if (SFD_style_num == 1){
-        fwrite(sofdec_message_block_cache, 1, 0x780, output)
+        fwrite(sofdec_message_block_cache, 1, 0x780, output);
     }
     else if (aix_num != 0 && sofdec_version == 2)
     {
