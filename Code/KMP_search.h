@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2021 Nebulas Astra <https://github.com/nebulas-star>
+// SPDX-License-Identifier: MIT
+
 #ifndef __KMP_SEARCH_H__
 #define __KMP_SEARCH_H__
 

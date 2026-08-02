@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2021 Nebulas Astra <https://github.com/nebulas-star>
+// SPDX-License-Identifier: MIT
+
 #ifndef __MPRG_BLOCK_PRINT_H__
 #define __MPRG_BLOCK_PRINT_H__
 

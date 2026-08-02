@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2021-2026 Nebulas Astra <https://github.com/nebulas-star>
+// SPDX-License-Identifier: MIT
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

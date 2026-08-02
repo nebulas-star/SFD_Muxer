@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2021 Nebulas Astra <https://github.com/nebulas-star>
+// SPDX-License-Identifier: MIT
+
 #ifndef __SFD_MUXER_ERROR_H__
 #define __SFD_MUXER_ERROR_H__
 

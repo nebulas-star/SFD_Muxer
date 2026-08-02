@@ -19,7 +19,7 @@ void sofdec_stream_message_block(FILE *out_file, int sofdec_version)
     if (sofdec_version == 2)
         version_block[0x0C] = 0x32;
     fwrite(version_block, 1, 0x18, out_file);
-    char identity_block[8] = {0x02, 0xFF, 0x00, 0x00, 0X20, 0x21, 0x07, 0x14};
+    char identity_block[8] = {0x02, 0xFF, 0x00, 0x00, 0X20, 0x26, 0x07, 0x24};
     if (sofdec_version == 2)
     {
         identity_block[1] = 0x02;
@@ -29,7 +29,7 @@ void sofdec_stream_message_block(FILE *out_file, int sofdec_version)
     fwrite(identity_block, 1, 8, out_file);
     if (sofdec_version == 1)
         sofdec_padding_block_print(out_file, 0x20);
-    char muxer_id[0x20] = "SFD_Muxer Ver.0.24 by Nebulas   ";
+    char muxer_id[0x20] = "SFD_Muxer Ver.0.2.8 by Nebulas   ";
     fwrite(muxer_id, 1, 0x20, out_file);
     if (sofdec_version == 2)
         sofdec_padding_block_print(out_file, 0x20);

@@ -1,2 +1,6 @@
 *.exe
 /.vscode/
+*.sfd
+*.sfa
+*.m1v
+*.mpg

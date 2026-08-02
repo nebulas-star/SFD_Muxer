@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2021-2026 Nebulas Astra <https://github.com/nebulas-star>
+// SPDX-License-Identifier: MIT
+
 #ifndef __FILE_FEATURE_READ_H__
 #define __FILE_FEATURE_READ_H__
 
