@@ -1,57 +1,59 @@
-// SPDX-FileCopyrightText: 2021, 2026 Nebulas Astra <https://github.com/nebulas-star>
+// SPDX-FileCopyrightText: 2026 Nebulas Astra <https://github.com/nebulas-star>
 // SPDX-License-Identifier: MIT
+
+// Substring searching function with Knuth–Morris–Pratt algorithm
+// Rewrite from 1977 original paper "Fast Pattern Matching in Strings" (DOI: 10.1137/0206024) Part 2 "Programming the algorithm" 
+// which sample programming in ALGOL with 1-based indexing
+// to C Language code with 0-based indexing
 
 #ifndef __MEMMEM__EXTEND_STRING_H__
 #define __MEMMEM__EXTEND_STRING_H__
 
-// Substring searching function with Knuth–Morris–Pratt algorithm
-
-
 #include <stdint.h>
-#include <string.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void get_next_array_val(uint8_t* sample_string, int sample_str_length, int *next)
+void compute_table_next(uint8_t* pattern, int m, int *next)
 {
     int j = 0;
-    int k = -1;
+    int t = -1;
     next[0] = -1;
-    while (j < sample_str_length - 1)
-    {
-        if (k == -1 || sample_string[j] == sample_string[k])
-        {
-            ++j;
-            ++k;
-            if (sample_string[j] != sample_string[k])
-                next[j] = k;
-            else
-                next[j] = next[k];
-        }
+    while (j < (m - 1)){
+        if(t > -1 && pattern[j] != pattern[t])
+            t = next[t];
+        t = t + 1;
+        j = j + 1;
+        if (pattern[j] == pattern[t])
+            next[j] = next[t];
         else
-            k = next[k];
+            next[j] = t;
     }
 }
 
-int memsearch(uint8_t* original_string, int original_str_length, uint8_t* sample_string, int sample_str_length, int search_start)
+int memsearch(uint8_t* text, int n, uint8_t* pattern, int m)
 {
-    int i = search_start;
+    int next[m];
+    compute_table_next(pattern, m, next);
+
     int j = 0;
-    int next[sample_str_length];
-    get_next_array_val(sample_string, sample_str_length, next);
-    while (i < original_str_length && j < sample_str_length)
-    {
-        if (j == -1 || original_string[i] == sample_string[j])
-        {
-            i++;
-            j++;
-        }
-        else
+    int k = 0;
+    while (j < m && k < n){
+        if (j > -1 && text[k] != pattern[j])
             j = next[j];
+        k = k + 1;
+        j = j + 1;
     }
-    if (j == sample_str_length)
-        return i - j;
+
+    if (j == m)
+        return k - j;
     else
         return -1;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __MEMMEM__EXTERN_STRING_H__
