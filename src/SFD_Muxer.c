@@ -11,7 +11,7 @@
 #include "MPEG_block_print.h"
 #include "Sofdec_block_print.h"
 #include "file_feature_read.h"
-#include "KMP_search.h"
+#include "memsearch.h"
 
 void overwrite_question(char *file, int ansi_codepage)
 {
@@ -466,7 +466,7 @@ int main(int argc, char *argv[])
             while (read_flag == 0)
             {
                 k = fread(file_style_cache, 1, 0x7E2, inputs[j]);
-                l = string_searching(file_style_cache, k, picture_head, 4, 0);
+                l = memsearch(file_style_cache, k, picture_head, 4, 0);
                 if (k == 0)
                 {
                     read_flag = 1;
@@ -501,7 +501,7 @@ int main(int argc, char *argv[])
                                 picture_num_current[j] = picture_num_basic[j];
                             }
                             DTS_forecast[j] = DTS_basic[j] * picture_num_current[j];
-                            l = string_searching(file_style_cache, k, picture_head, 4, (last_picture_start + 1));
+                            l = memsearch(file_style_cache, k, picture_head, 4, (last_picture_start + 1));
                         }
                         last_picture_start = 0;
                     }

@@ -1,6 +1,8 @@
 #ifndef __SOFDEC_BLOCK_PRINT_H__
 #define __SOFDEC_BLOCK_PRINT_H__
 
+#define MUXER_VERSION_STRING  "SFD_Muxer Ver.0.2.8 by Nebulas   "
+
 void sofdec_padding_block_print(FILE *out_file, unsigned int byte_num)
 {
     int i = 0;
@@ -29,7 +31,7 @@ void sofdec_stream_message_block(FILE *out_file, int sofdec_version)
     fwrite(identity_block, 1, 8, out_file);
     if (sofdec_version == 1)
         sofdec_padding_block_print(out_file, 0x20);
-    char muxer_id[0x20] = "SFD_Muxer Ver.0.2.8 by Nebulas   ";
+    char muxer_id[0x20] = MUXER_VERSION_STRING;
     fwrite(muxer_id, 1, 0x20, out_file);
     if (sofdec_version == 2)
         sofdec_padding_block_print(out_file, 0x20);

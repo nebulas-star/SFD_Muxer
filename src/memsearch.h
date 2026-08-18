@@ -1,10 +1,17 @@
-// SPDX-FileCopyrightText: 2021 Nebulas Astra <https://github.com/nebulas-star>
+// SPDX-FileCopyrightText: 2021, 2026 Nebulas Astra <https://github.com/nebulas-star>
 // SPDX-License-Identifier: MIT
 
-#ifndef __KMP_SEARCH_H__
-#define __KMP_SEARCH_H__
+#ifndef __MEMMEM__EXTEND_STRING_H__
+#define __MEMMEM__EXTEND_STRING_H__
 
-void get_next_array_val(unsigned char* sample_string, int sample_str_length, int *next)
+// Substring searching function with Knuth–Morris–Pratt algorithm
+
+
+#include <stdint.h>
+#include <string.h>
+
+
+void get_next_array_val(uint8_t* sample_string, int sample_str_length, int *next)
 {
     int j = 0;
     int k = -1;
@@ -24,7 +31,8 @@ void get_next_array_val(unsigned char* sample_string, int sample_str_length, int
             k = next[k];
     }
 }
-int string_searching(unsigned char *original_string, int original_str_length, unsigned char *sample_string, int sample_str_length, int search_start)
+
+int memsearch(uint8_t* original_string, int original_str_length, uint8_t* sample_string, int sample_str_length, int search_start)
 {
     int i = search_start;
     int j = 0;
@@ -46,4 +54,4 @@ int string_searching(unsigned char *original_string, int original_str_length, un
         return -1;
 }
 
-#endif
+#endif // __MEMMEM__EXTERN_STRING_H__
