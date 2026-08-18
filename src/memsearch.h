@@ -6,8 +6,8 @@
 // which sample programming in ALGOL with 1-based indexing
 // to C Language code with 0-based indexing
 
-#ifndef __MEMMEM__EXTEND_STRING_H__
-#define __MEMMEM__EXTEND_STRING_H__
+#ifndef __MEMSEARCH_H__
+#define __MEMSEARCH_H__
 
 #include <stdint.h>
 
@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-void compute_table_next(uint8_t* pattern, int m, int *next)
+static void compute_table_next(uint8_t* pattern, int m, int *next)
 {
     int j = 0;
     int t = -1;
@@ -56,4 +56,4 @@ int memsearch(uint8_t* text, int n, uint8_t* pattern, int m)
 }
 #endif
 
-#endif // __MEMMEM__EXTERN_STRING_H__
+#endif // __MEMSEARCH_H__
