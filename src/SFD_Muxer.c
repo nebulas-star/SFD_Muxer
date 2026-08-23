@@ -7,30 +7,28 @@
 #include <math.h>
 #include <io.h>//for Linux, changing for <unistd.h>
 
+// source: https://github.com/skeeto/optparse
+// commit: a86877ed301d89a4eb64feb08f23af395aede2ed
+#define OPTPARSE_IMPLEMENTATION
+#define OPTPARSE_API static
+#include "lib/optparse.h"
+
 #include "SFD_Muxer_Error.h"
 #include "MPEG_block_print.h"
 #include "Sofdec_block_print.h"
 #include "file_feature_read.h"
 #include "memsearch.h"
 
-void overwrite_question(char *file, int ansi_codepage)
+
+void overwrite_question(char *file)
 {
-    if      (ansi_codepage == 1252)
-        printf("File \"%s\" already exists. Overwrite? [y/N]", file);
-    else if (ansi_codepage == 936)
-        printf("指定的输出文件\"%s\"已存在，是否覆盖？[y/N]", file);
+    printf("File \"%s\" already exists. Overwrite? [y/N]\n", file);
     char i;
     scanf("%c", &i);
-    if(i != 'y' && i != 'Y')
+    if(i != 'y' && i != 'Y'){
+        printf("User termination.");
         exit(0);
-}
-
-void mux_end_print(int ansi_codepage)
-{
-    if      (ansi_codepage == 1252)
-        printf("\nMux complete.\n");
-    else if (ansi_codepage == 936)
-        printf("\n混流已完成。\n");
+    }
 }
 
 int main(int argc, char *argv[])
@@ -62,7 +60,6 @@ int main(int argc, char *argv[])
     unsigned int default_overwrite_flag = 0;
     unsigned int audio_ID_start_offset_num = 0;
     unsigned int audio_ID_start_offset = 0;
-    int ansi_codepage = 1252;
 
     int i, j, k, l;
     FILE *input_cache;
@@ -91,80 +88,70 @@ int main(int argc, char *argv[])
 
     unsigned char sofdec_message_block_cache[0x800];
 
-    //read from terminal
-    for (i = 1; (i + 1) < argc; i = i + 2)
-    {
-        if      (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "-V") == 0)
-        {
-            video_file[video_num] = argv[i + 1];
-            video_num++;
-        }
-        else if (strcmp(argv[i], "-a") == 0 || strcmp(argv[i], "-A") == 0)
-        {
-            audio_file[audio_num] = argv[i + 1];
-            audio_num++;
-        }
-        else if (strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "-O") == 0)
-        {
-            output_file = argv[i + 1];
-            output_num++;
-        }
-        else if (strcmp(argv[i], "-sfd") == 0 || strcmp(argv[i], "-SFD") == 0)
-        {
-            SFD_style_num++;
-            SFD_style_file = argv[i + 1];
-        }
-        else if (strcmp(argv[i], "-s") == 0 || strcmp(argv[i], "-S") == 0)
-        {
-            sofdec_version_num++;
-            sscanf(argv[i + 1], "%u", &sofdec_version);
-        }
-        else if (strcmp(argv[i], "-y") == 0 || strcmp(argv[i], "-Y") == 0)
-        {
-            default_overwrite_flag = 1;
-            i--;
-        }
-        else if (strcmp(argv[i], "-as") == 0 || strcmp(argv[i], "-AS") == 0)
-        {
-            audio_ID_start_offset_num++;
-            sscanf(argv[i + 1], "%u", &audio_ID_start_offset);
+    if (argc < 5)
+        error(000, 0);
 
+    char *arg;
+    int option;
+    struct optparse options;
+    optparse_init(&options, argv);
+    while ((option = optparse(&options, "A:M:a:ho:s:v:y")) != -1) {
+        switch (option) {
+        case 'y':
+            default_overwrite_flag = 1;
+            break;
+        case 'v':
+            video_file[video_num] = options.optarg;
+            video_num++;
+            break;
+        case 'a':
+            audio_file[audio_num] = options.optarg;
+            audio_num++;
+            break;
+        case 'o':
+            output_file = options.optarg;
+            output_num++;
+            break;
+        case 's':
+            SFD_style_file = options.optarg;
+            SFD_style_num++;
+            break;
+        case 'M':
+            sscanf(options.optarg, "%u", &sofdec_version);
+            sofdec_version_num++;
+            break;
+        case 'A':
+            sscanf(options.optarg, "%u", &audio_ID_start_offset);
+            audio_ID_start_offset_num++;
+            break;
+        case 'h':
+            error(000, 0);
+        case '?':
+            error(001, options.optopt);
         }
-        else if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "-L") == 0)
-        {
-            if     (strcmp(argv[i+1], "e") == 0 || strcmp(argv[i+1], "E") == 0)
-                ansi_codepage = 1252;
-            else if(strcmp(argv[i+1], "c") == 0 || strcmp(argv[i+1], "C") == 0)
-                ansi_codepage = 936;
-            else
-                printf("Warning: Language parameter isn't conformed to constraint conditions. The interface language is still in use English.\n");
-        }
-        else
-            error(001, argv[i], ansi_codepage);
     }
     files_num = video_num + audio_num;
-    if ((default_overwrite_flag == 0 && argc % 2 == 0) || argc < 5 || (default_overwrite_flag == 1 && argc % 2 == 1))
-        error(000, 0, ansi_codepage);
+
     if (video_num == 0)
-        error(010, 0, ansi_codepage);
+        error(010, 0);
     if (output_num == 0)
-        error(011, 0, ansi_codepage);
+        error(011, 0);
     if (output_num > 1)
-        error(012, 0, ansi_codepage);
+        error(012, 0);
     if (video_num > 16)
-        error(020, 0, ansi_codepage);
+        error(020, 0);
     if (audio_num > 32)
-        error(021, 0, ansi_codepage);
+        error(021, 0);
     if (sofdec_version > 2 || sofdec_version < 1)
-        error(030, 0, ansi_codepage);
+        error(030, 0);
     if (sofdec_version_num > 1)
-        error(031, 0, ansi_codepage);
+        error(031, 0);
     if ((audio_ID_start_offset + audio_num) > 32 )
-        error(032, 0, ansi_codepage);
+        error(032, 0);
     if (audio_ID_start_offset_num > 1)
-        error(033, 0, ansi_codepage);
+        error(033, 0);
     if (SFD_style_num > 1)
-        error(034, 0, ansi_codepage);
+        error(034, 0);
 
     //input classification
     for (i = 0; i < video_num; i++)
@@ -193,10 +180,10 @@ int main(int argc, char *argv[])
             fclose(input_cache);
         }
         else
-            error(100, video_file[i], ansi_codepage);
+            error(100, video_file[i]);
     }
     if (m2v_num > 0)//Now can't mux MPEG-2 Video.
-        error(901, 0, ansi_codepage);
+        error(901, 0);
     for (i = 0; i < audio_num; i++)
     {
         input_cache = fopen(audio_file[i], "rb");
@@ -211,7 +198,7 @@ int main(int argc, char *argv[])
                 sfa_num++;
             }
             else
-                error(111, audio_file[i], ansi_codepage);
+                error(111, audio_file[i]);
         }
         else if (file_style_cache[0] == 0x0B && file_style_cache[1] == 0x77)
         {
@@ -231,14 +218,14 @@ int main(int argc, char *argv[])
                 aix_num++;
             }
             else
-                error(112, audio_file[i], ansi_codepage);
+                error(112, audio_file[i]);
         }
         else
-            error(110, audio_file[i], ansi_codepage);
+            error(110, audio_file[i]);
         fclose(input_cache);
     }
     if ((sfa_num + aix_num) == 0 && ac3_num > 0)
-        error(022, 0, ansi_codepage);
+        error(022, 0);
 
     //If sample Sofdec, read parameter.
     if (SFD_style_num == 1)
@@ -284,11 +271,11 @@ int main(int argc, char *argv[])
             fclose(input_cache);
         }
         else
-            error(120, SFD_style_file, ansi_codepage);
+            error(120, SFD_style_file);
     if (video_bound != video_num)
-        error(300, 0, ansi_codepage);
+        error(300, 0);
     if (audio_bound != audio_num)
-        error(301, 0, ansi_codepage);
+        error(301, 0);
     }
     
     if (SFD_style_num == 0)
@@ -304,7 +291,7 @@ int main(int argc, char *argv[])
                 j = sample_rate_read(file_style_cache[0x08], file_style_cache[0x09], file_style_cache[0x0A],
                                                                                      file_style_cache[0x0B]);
                 k = file_style_cache[0x07];
-                mux_rate = mux_rate + sfa_rate_made(j, k, ansi_codepage);
+                mux_rate = mux_rate + sfa_rate_made(j, k);
                 fclose(input_cache);
             }
         if (aix_num != 0)
@@ -315,11 +302,11 @@ int main(int argc, char *argv[])
                 j = sample_rate_read(file_style_cache[0x48], file_style_cache[0x49], file_style_cache[0x4A],
                                                                                      file_style_cache[0x4B]);
                 k = file_style_cache[0x4C];
-                mux_rate = mux_rate + (3 * sfa_rate_made(j, k, ansi_codepage));
+                mux_rate = mux_rate + (3 * sfa_rate_made(j, k));
                 fclose(input_cache);
             }
         if (mux_rate >= 0x3FFFFF)
-            error(200, 0, ansi_codepage);
+            error(200, 0);
     }
 
     //calculate DTS basic
@@ -356,23 +343,23 @@ int main(int argc, char *argv[])
     //overwrite?
     j = _access(output_file, 00);//for linus, changing for "access(output_file, 00);"
     if (j == 0 && default_overwrite_flag == 0)
-        overwrite_question(output_file, ansi_codepage);
+        overwrite_question(output_file);
 
     //write
     output = fopen(output_file, "wb");
     SCR_flag = 0;
     if (audio_num != 0)
     {
-        pack_head_print(output, SCR_flag, mux_rate, ansi_codepage);
+        pack_head_print(output, SCR_flag, mux_rate);
         system_head_print(output, mux_rate, 0, audio_num, audio_ID_start_offset);
         padding_stream_print(output, (0x07E2 - 3 * audio_num));
         SCR_flag++;
     }
-    pack_head_print(output, SCR_flag, mux_rate, ansi_codepage);
+    pack_head_print(output, SCR_flag, mux_rate);
     system_head_print(output, mux_rate, video_num, 0, 0);
     padding_stream_print(output, (0x07E2 - 3 * video_num));
     SCR_flag++;
-    pack_head_print(output, SCR_flag, mux_rate, ansi_codepage);
+    pack_head_print(output, SCR_flag, mux_rate);
     sofdec_stream_message_block(output, sofdec_version);
     if (SFD_style_num == 1){
         fwrite(sofdec_message_block_cache, 1, 0x780, output);
@@ -445,13 +432,13 @@ int main(int argc, char *argv[])
             }
             else
             {
-                pack_head_print(output, SCR_flag, mux_rate, ansi_codepage);
+                pack_head_print(output, SCR_flag, mux_rate);
                 packet_head_print(output, (0xC0 + j + audio_ID_start_offset), (k + 0x07), 0, 0, 0x04, 0, DTS_forecast[j], 0);
                 fwrite(file_style_cache, 1, k, output);
                 padding_stream_print(output, 0x07E1 - k);
                 DTS_forecast[j] = DTS_forecast[j] + DTS_basic[j]; //renewal DTS
                 if (DTS_forecast[j] > 0x1FFFFFFFF)
-                    error(202, 0, ansi_codepage);
+                    error(202, 0);
                 if (k < 0x7E0)
                 {
                     DTS_flag[j] = 0xFF;
@@ -475,7 +462,7 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    pack_head_print(output, SCR_flag, mux_rate, ansi_codepage);
+                    pack_head_print(output, SCR_flag, mux_rate);
                     if (l == -1 || l >= 0x7DA) //no picture_head
                         packet_head_print(output, (0xE0 + j - audio_num), (k + 0x0C), 0, 1, 0x2E, 4, 0, 0);
                     else
@@ -523,7 +510,7 @@ int main(int argc, char *argv[])
             SCR_flag = 0;//End loop
     }
     sofdec_ending_block_print(output);
-    mux_end_print(ansi_codepage);
+    printf("\nMux complete.\n");
     return 0;
 }
 

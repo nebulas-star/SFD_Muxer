@@ -21,12 +21,12 @@ unsigned long long int SCR_made(unsigned long long int block_num, unsigned long 
     }
     return e;
 }
-void SCR_block_print(FILE *out_file, unsigned long long int block_num, unsigned long long int mux_rate, int ansi_codepage)
+void SCR_block_print(FILE *out_file, unsigned long long int block_num, unsigned long long int mux_rate)
 {
     unsigned long long int SCR;
     SCR = SCR_made(block_num, mux_rate);
     if (SCR > 0x1FFFFFFFF)
-        error(201, 0, ansi_codepage);
+        error(201, 0);
     unsigned long long int a, b, c, d, e;
     a =  (SCR >> 29) | 0x21;
     b =  (SCR >> 22) & 0xFF;
@@ -93,11 +93,11 @@ void PTS_DTS_block_print(FILE *out_file, char TS_mark, unsigned long long xTS)
     fwrite(PTS_DTS_block, 1, 5, out_file);
 }
 
-void pack_head_print(FILE *out_file, unsigned long long int block_num, unsigned long long int mux_rate, int ansi_codepage)
+void pack_head_print(FILE *out_file, unsigned long long int block_num, unsigned long long int mux_rate)
 {
     char pack_start_code[4] = {0x00, 0x00, 0x01, 0xBA};
     fwrite(pack_start_code, 1, 4, out_file);
-    SCR_block_print(out_file, block_num, mux_rate, ansi_codepage);
+    SCR_block_print(out_file, block_num, mux_rate);
     rate_block_print(out_file, mux_rate);
 }
 void system_head_print(FILE *out_file, unsigned long long int mux_rate, unsigned int video_bound, 

@@ -6,8 +6,8 @@
 // which sample programming in ALGOL with 1-based indexing
 // to C Language code with 0-based indexing
 
-#ifndef __MEMSEARCH_H__
-#define __MEMSEARCH_H__
+#ifndef __MEMSEARCH_LIB__
+#define __MEMSEARCH_LIB__
 
 #include <stdint.h>
 
@@ -56,4 +56,4 @@ int memsearch(uint8_t* text, int n, uint8_t* pattern, int m)
 }
 #endif
 
-#endif // __MEMSEARCH_H__
+#endif // __MEMSEARCH_LIB__
