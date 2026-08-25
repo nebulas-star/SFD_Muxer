@@ -7,6 +7,8 @@
 #include <math.h>
 #include <io.h>//for Linux, changing for <unistd.h>
 
+
+#include "lib/memsearch.h"
 // source: https://github.com/skeeto/optparse
 // commit: a86877ed301d89a4eb64feb08f23af395aede2ed
 #define OPTPARSE_IMPLEMENTATION
@@ -17,7 +19,6 @@
 #include "MPEG_block_print.h"
 #include "Sofdec_block_print.h"
 #include "file_feature_read.h"
-#include "memsearch.h"
 
 
 void overwrite_question(char *file)
