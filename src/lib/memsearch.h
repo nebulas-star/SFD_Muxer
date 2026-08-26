@@ -30,13 +30,13 @@ static void compute_table_next(unsigned char* pattern, int m, int *next)
     }
 }
 
-int memsearch(unsigned char* text, int n, unsigned char* pattern, int m)
+int memsearch(unsigned char* text, int n, int offset, unsigned char* pattern, int m)
 {
     int next[m];
     compute_table_next(pattern, m, next);
 
     int j = 0;
-    int k = 0;
+    int k = offset;
     while (j < m && k < n){
         while (j > -1 && text[k] != pattern[j])
             j = next[j];

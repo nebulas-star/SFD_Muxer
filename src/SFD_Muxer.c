@@ -454,7 +454,7 @@ int main(int argc, char *argv[])
             while (read_flag == 0)
             {
                 k = fread(file_style_cache, 1, 0x7E2, inputs[j]);
-                l = memsearch(file_style_cache, k, picture_head, 4);
+                l = memsearch(file_style_cache, k, 0, picture_head, 4);
                 if (k == 0)
                 {
                     read_flag = 1;
@@ -489,7 +489,7 @@ int main(int argc, char *argv[])
                                 picture_num_current[j] = picture_num_basic[j];
                             }
                             DTS_forecast[j] = DTS_basic[j] * picture_num_current[j];
-                            l = memsearch((file_style_cache + last_picture_start + 1), k, picture_head, 4);
+                            l = memsearch((file_style_cache + last_picture_start + 1), k, 0, picture_head, 4);
                         }
                         last_picture_start = 0;
                     }
