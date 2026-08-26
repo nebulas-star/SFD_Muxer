@@ -9,19 +9,17 @@
 #ifndef __MEMSEARCH_LIB__
 #define __MEMSEARCH_LIB__
 
-#include <stdint.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-static void compute_table_next(uint8_t* pattern, int m, int *next)
+static void compute_table_next(unsigned char* pattern, int m, int *next)
 {
     int j = 0;
     int t = -1;
     next[0] = -1;
     while (j < (m - 1)){
-        if(t > -1 && pattern[j] != pattern[t])
+        while (t > -1 && pattern[j] != pattern[t])
             t = next[t];
         t = t + 1;
         j = j + 1;
@@ -32,7 +30,7 @@ static void compute_table_next(uint8_t* pattern, int m, int *next)
     }
 }
 
-int memsearch(uint8_t* text, int n, uint8_t* pattern, int m)
+int memsearch(unsigned char* text, int n, unsigned char* pattern, int m)
 {
     int next[m];
     compute_table_next(pattern, m, next);
@@ -40,7 +38,7 @@ int memsearch(uint8_t* text, int n, uint8_t* pattern, int m)
     int j = 0;
     int k = 0;
     while (j < m && k < n){
-        if (j > -1 && text[k] != pattern[j])
+        while (j > -1 && text[k] != pattern[j])
             j = next[j];
         k = k + 1;
         j = j + 1;
