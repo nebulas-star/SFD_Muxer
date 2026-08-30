@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
         case 'h':
             error(000, 0);
         case '?':
-            error(001, options.optopt);
+            error(001, (char* )&options.optopt);
         }
     }
     files_num = video_num + audio_num;
