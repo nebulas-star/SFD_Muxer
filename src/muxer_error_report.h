@@ -6,7 +6,7 @@
 
 #include <stdarg.h>
 
-void error(int error_code, ...)
+void muxer_error(int error_code, ...)
 {   va_list args;
     va_start(args, error_code);
 

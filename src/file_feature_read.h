@@ -4,7 +4,7 @@
 #ifndef __FILE_FEATURE_READ_H__
 #define __FILE_FEATURE_READ_H__
 
-#include "SFD_Muxer_Error.h"
+#include "muxer_error_report.h"
 
 unsigned int sfa_rate_made(unsigned int sampling_rate, unsigned int channel_count)
 {
@@ -17,7 +17,7 @@ unsigned int sfa_rate_made(unsigned int sampling_rate, unsigned int channel_coun
     else if (channel_count == 1 && sampling_rate == 24000)
         rate_out = 0x142;
     else
-        error(903, 0);//don't know how to get rate basic for 1 channel's sfa file.
+        muxer_error(903, 0);//don't know how to get rate basic for 1 channel's sfa file.
     return rate_out;
 }
 unsigned long int rate_read(unsigned int i, unsigned int j, unsigned long int k)

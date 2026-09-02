@@ -4,7 +4,7 @@
 #ifndef __MPRG_BLOCK_PRINT_H__
 #define __MPRG_BLOCK_PRINT_H__
 
-#include "SFD_Muxer_Error.h"
+#include "muxer_error_report.h"
 
 unsigned long long int SCR_made(unsigned long long int block_num, unsigned long long int mux_rate)
 {
@@ -26,7 +26,7 @@ void SCR_block_print(FILE *out_file, unsigned long long int block_num, unsigned 
     unsigned long long int SCR;
     SCR = SCR_made(block_num, mux_rate);
     if (SCR > 0x1FFFFFFFF)
-        error(201, 0);
+        muxer_error(201, 0);
     unsigned long long int a, b, c, d, e;
     a =  (SCR >> 29) | 0x21;
     b =  (SCR >> 22) & 0xFF;

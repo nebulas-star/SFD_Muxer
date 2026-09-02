@@ -15,7 +15,7 @@
 #define OPTPARSE_API static
 #include "lib/optparse.h"
 
-#include "SFD_Muxer_Error.h"
+#include "muxer_error_report.h"
 #include "MPEG_block_print.h"
 #include "Sofdec_block_print.h"
 #include "file_feature_read.h"
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     unsigned char sofdec_message_block_cache[0x800];
 
     if (argc < 5)
-        error(000, 0);
+        muxer_error(000, 0);
 
     char *arg;
     int option;
@@ -126,33 +126,33 @@ int main(int argc, char *argv[])
             audio_ID_start_offset_num++;
             break;
         case 'h':
-            error(000, 0);
+            muxer_error(000, 0);
         case '?':
-            error(001, (char* )&options.optopt);
+            muxer_error(001, (char* )&options.optopt);
         }
     }
     files_num = video_num + audio_num;
 
     if (video_num == 0)
-        error(010, 0);
+        muxer_error(010, 0);
     if (output_num == 0)
-        error(011, 0);
+        muxer_error(011, 0);
     if (output_num > 1)
-        error(012, 0);
+        muxer_error(012, 0);
     if (video_num > 16)
-        error(020, 0);
+        muxer_error(020, 0);
     if (audio_num > 32)
-        error(021, 0);
+        muxer_error(021, 0);
     if (sofdec_version > 2 || sofdec_version < 1)
-        error(030, 0);
+        muxer_error(030, 0);
     if (sofdec_version_num > 1)
-        error(031, 0);
+        muxer_error(031, 0);
     if ((audio_ID_start_offset + audio_num) > 32 )
-        error(032, 0);
+        muxer_error(032, 0);
     if (audio_ID_start_offset_num > 1)
-        error(033, 0);
+        muxer_error(033, 0);
     if (SFD_style_num > 1)
-        error(034, 0);
+        muxer_error(034, 0);
 
     //input classification
     for (i = 0; i < video_num; i++)
@@ -181,10 +181,10 @@ int main(int argc, char *argv[])
             fclose(input_cache);
         }
         else
-            error(100, video_file[i]);
+            muxer_error(100, video_file[i]);
     }
     if (m2v_num > 0)//Now can't mux MPEG-2 Video.
-        error(901, 0);
+        muxer_error(901, 0);
     for (i = 0; i < audio_num; i++)
     {
         input_cache = fopen(audio_file[i], "rb");
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
                 sfa_num++;
             }
             else
-                error(111, audio_file[i]);
+                muxer_error(111, audio_file[i]);
         }
         else if (file_style_cache[0] == 0x0B && file_style_cache[1] == 0x77)
         {
@@ -219,14 +219,14 @@ int main(int argc, char *argv[])
                 aix_num++;
             }
             else
-                error(112, audio_file[i]);
+                muxer_error(112, audio_file[i]);
         }
         else
-            error(110, audio_file[i]);
+            muxer_error(110, audio_file[i]);
         fclose(input_cache);
     }
     if ((sfa_num + aix_num) == 0 && ac3_num > 0)
-        error(022, 0);
+        muxer_error(022, 0);
 
     //If sample Sofdec, read parameter.
     if (SFD_style_num == 1)
@@ -272,11 +272,11 @@ int main(int argc, char *argv[])
             fclose(input_cache);
         }
         else
-            error(120, SFD_style_file);
+            muxer_error(120, SFD_style_file);
     if (video_bound != video_num)
-        error(300, 0);
+        muxer_error(300, 0);
     if (audio_bound != audio_num)
-        error(301, 0);
+        muxer_error(301, 0);
     }
     
     if (SFD_style_num == 0)
@@ -307,7 +307,7 @@ int main(int argc, char *argv[])
                 fclose(input_cache);
             }
         if (mux_rate >= 0x3FFFFF)
-            error(200, 0);
+            muxer_error(200, 0);
     }
 
     //calculate DTS basic
@@ -439,7 +439,7 @@ int main(int argc, char *argv[])
                 padding_stream_print(output, 0x07E1 - k);
                 DTS_forecast[j] = DTS_forecast[j] + DTS_basic[j]; //renewal DTS
                 if (DTS_forecast[j] > 0x1FFFFFFFF)
-                    error(202, 0);
+                    muxer_error(202, 0);
                 if (k < 0x7E0)
                 {
                     DTS_flag[j] = 0xFF;
