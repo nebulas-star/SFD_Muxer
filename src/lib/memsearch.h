@@ -3,8 +3,6 @@
 
 // Substring searching function with Knuth–Morris–Pratt algorithm
 // Rewrite from 1977 original paper "Fast Pattern Matching in Strings" (DOI: 10.1137/0206024) Part 2 "Programming the algorithm" 
-// which sample programming in ALGOL with 1-based indexing
-// to C Language code with 0-based indexing
 
 #ifndef __MEMSEARCH_LIB__
 #define __MEMSEARCH_LIB__
