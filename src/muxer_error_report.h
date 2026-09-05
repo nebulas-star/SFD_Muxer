@@ -4,23 +4,88 @@
 #ifndef __MUXER_ERROR_REPORT__
 #define __MUXER_ERROR_REPORT__
 
+#include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
-void muxer_error(int error_code, ...)
+#define     E__HELP                         0x80000000
+
+#define     E__OPT_NUM                      0x80000001      // 参数数量错误
+#define     E__OPT_UNKNOWN                  0x80000011      // 未知参数
+#define     E__OPT_WRONG_REP                0x80000021      // 不可重复声明的参数被声明多次
+#define     E__OPT_NON_NESSARY              0x80000041      // 缺少必须的参数、如输出文件指定 
+#define     E__OPT_WRONG_VALUE              0x80000081      // 参数值声明错误
+
+#define     E__UNSUPPORTED_VIDEO_FORMAT     0x80001001      // 不支持的视频格式
+#define     E__UNSUPPORTED_AUDIO_FORMAT     0x80001002      // 不支持的音频格式
+
+#define     E__NOT_CONFORM_MPEG             0x80001100      // 不合法的MPEG视频流
+
+#define     E__NOT_CONFORM_ADX              0x80001200      // 不合法的ADX：使用了未知的音频编码器
+#define     E__NOT_CONFORM_SFA              0x80001201      // 不符合SFA约束的ADX输入
+#define     E__NOT_CONFORM_A52              0x80001202      // 不合法的AC-3
+#define     E__NOT_CONFORM_AHX              0x80001203      // 不合法的AHX
+#define     E__NOT_CONFORM_AIX              0x80001204      // 不合法的AIX
+
+#define     E__NOT_CONFORM_SFD              0x80001301      // SFD参考文件格式不正确
+
+#define     E__EXCEED_INPUT_STREAM_LIMIT    0x80002001      // 输入流数量超限，包括数据速率过大/视频超16/音频超32/超出sfd记述能力
+#define     E__EXCEED_REPLY_TIME_LIMIT      0x80002002      // 时长超限，包括参考时钟/DTS/PTS爆表
+
+#define     E__DIFF_VIDEO_NUM               0x80004001      // 不符合SFD参考文件中声明的视频流数目
+#define     E__DIFF_AUDIO_NUM               0x80004002      // 不符合SFD参考文件中声明的音频流数目
+
+#define     E__TODO                         0xFFFFFFFF      // 尚未实现
+
+void muxer_error(size_t error_code, ...)
 {   va_list args;
     va_start(args, error_code);
 
     switch(error_code){
-        case 000:
-            printf("ERROR 000: Parameters quantity isn't conformed to constraint conditions.");
+        case E__HELP:
+            printf("USAGE:\n");
+            printf("    SFD_Muxer [-h]\n");
+            printf("    SFD_Muxer [-y] [-v <video_input>]... [-a <audio_input>]... -o <output_file> [-s <sample_sfd_file>]\n");
+            printf("    SFD_Muxer [-y] [-v <video_input>]... [-a <audio_input>]... -o <output_file> [-M <sofdec_metadata_verson>] [-A <audio_id_off>]\n");
+            printf("\n");
+            printf("OPTIONS:\n");
+            printf("    -h:   print help infomation.\n");
+            printf("\n");
+            printf("    -y:   overwrite output files\n");
+            printf("    -v:   specific input video file name\n");
+            printf("    -a:   specific input audio file name\n");
+            printf("    -o:   specific output file name\n");
+            printf("\n");
+            printf("    -s:   specific sample sofdec file. when need modify and rebuild sofdec file, use this option with original file in argument for rebuild sample.\n");
+            printf("\n");
+            printf("    -M:   sofdec metadata version. only 2 different version.\n");
+            printf("    -A:   audio stream id offset. when need leave in blank first x audio stream, use this option with argument x.");
+            printf("\n");
             break;
-        case 001:
-            char* error_file = va_arg(args, char*);
-            printf("ERROR 001: Undefined parameter \"%s\" exist in the command.", error_file);
+//  -d:   sofdec文件元数据转储，由sfd_info给出
+//  -t:   *.tag输入
+//  -x:   *.sfx输入
+//  -T:   若无输入则添加一个占位流，以符合原始Sofdec Multiplexer行为
+        case E__OPT_NUM:
+            char* num_error_opt = va_arg(args, char*);
+            printf("[ERROR] Option \"%s\" miss parameters.",  num_error_opt);
             break;
-        case 010:
-            printf("ERROR 010: No input video stream specified.");
+        case E__OPT_UNKNOWN:
+            char* ukn_opt = va_arg(args, char*);
+            printf("[ERROR] Undefined option \"%s\".", ukn_opt);
             break;
+        case E__OPT_WRONG_REP:
+            char* rep_opt = va_arg(args, char*);
+            printf("[ERROR] The non-reusable option \"%s\" has been used multiple times.", rep_opt);
+            break;
+        case E__UNSUPPORTED_VIDEO_FORMAT:
+            char* unsp_vfile = va_arg(args, char*);
+            printf("[ERROR] The specified video stream \"%s\" is not an MPEG-1/2 video stream.", unsp_vfile);
+            break;
+        case E__EXCEED_REPLY_TIME_LIMIT:
+            printf("[ERROR] Input stream is too long, and the maximum length of the DTS/PTS field exceeds the container constraint.");
+            break;
+
         case 011:
             printf("ERROR 011: No output file specified.");
             break;
@@ -39,22 +104,10 @@ void muxer_error(int error_code, ...)
         case 030:
             printf("ERROR 030: The specified Sofdec stream version does not meet the constraints.");
             break;
-        case 031:
-            printf("ERROR 031: The specified number of Sofdec stream version is greater than 1.");
-            break;
         case 032:
             printf("ERROR 032: The specified start offset value of the audio stream does not meet the constraints.");
             break;
-        case 033:
-            printf("ERROR 033: The specified number of start offset value of the audio stream is greater than 1.");
-            break;
-        case 034:
-            printf("ERROR 034: The specified number of sample Sofdec file is greater than 1.");
-            break;
-        case 100:
-            char* error_file = va_arg(args, char*);
-            printf("ERROR 100: The specified video stream \"%s\" is not an MPEG-1/2 video stream.", error_file);
-            break;
+/*
         case 110:
             char* error_file = va_arg(args, char*);
             printf("ERROR 110: The specified audio stream \"%s\" is not an SFA/AIX/AC-3 audio stream.", error_file);
@@ -71,14 +124,12 @@ void muxer_error(int error_code, ...)
             char* error_file = va_arg(args, char*);
             printf("ERROR 120: The specified sample Sofdec file \"%s\" isn't conformed to constraint conditions.", error_file);
             break;
+*/
         case 200:
             printf("ERROR 200: Too many input streams, and the length of the mux_rate field exceeds the container constraint.");
             break;
         case 201:
             printf("ERROR 201: Too many input streams, and the maximum length of the system_lock_reference field exceeds the container constraint.");
-            break;
-        case 202:
-            printf("ERROR 202: The input stream is too long, and the maximum length of the DTS/PTS field exceeds the container constraint.");
             break;
         case 300:
             printf("ERROR 300: The number of input video streams is different from the number of video streams in the sample Sofdec file.");
@@ -95,8 +146,13 @@ void muxer_error(int error_code, ...)
         case 903:
             printf("ERROR 903: The parameters of the SFA audio stream are not in the predetermined parameter table.");
             break;
+
+        case E__TODO:
+            char* todo_function = va_arg(args, char*);
+            printf("[ERROR] Function \"%s\" has not yet been implemented.", todo_function);
+            break;
         default:
-            ;
+            printf("[ERROR] Internal error: %03lld | 0x%08llx.", error_code, error_code);
     }
     va_end(args);
 

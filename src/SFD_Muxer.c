@@ -2,10 +2,13 @@
 // SPDX-License-Identifier: MIT
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <io.h>//for Linux, changing for <unistd.h>
+#include <stdint.h>
+
+#include <unistd.h>     // POSIX
 
 
 #include "lib/memsearch.h"
@@ -16,9 +19,8 @@
 #include "lib/optparse.h"
 
 #include "muxer_error_report.h"
-#include "MPEG_block_print.h"
-#include "Sofdec_block_print.h"
-#include "file_feature_read.h"
+#include "metadata_reader.h"
+#include "mpeg1_pack_builder.h"
 
 
 void overwrite_question(char *file)
@@ -37,66 +39,25 @@ int main(int argc, char *argv[])
     unsigned int files_num = 0;
     unsigned int video_num = 0;
     char *video_file[16];
-    unsigned int m1v_num = 0;
-    char *m1v_file[16];
-    float m1v_DTS_basic[16];
-    unsigned int m2v_num = 0;
-    char *m2v_file[16];
     unsigned int audio_num = 0;
     char *audio_file[32];
-    unsigned int sfa_num = 0;
-    char *sfa_file[32];
-    unsigned int sfa_DTS_basic[32];
-    unsigned int aix_num = 0;
-    char *aix_file[32];
-    unsigned int aix_DTS_basic[32];
-    unsigned int ac3_num = 0;
-    char *ac3_file[32];
-    unsigned int output_num = 0;
-    char *output_file = 0;
-    unsigned int SFD_style_num = 0;
-    char *SFD_style_file = 0;
-    unsigned int sofdec_version_num = 0;
-    unsigned int sofdec_version = 1;
     unsigned int default_overwrite_flag = 0;
-    unsigned int audio_ID_start_offset_num = 0;
-    unsigned int audio_ID_start_offset = 0;
 
-    int i, j, k, l;
-    FILE *input_cache;
-    unsigned char file_style_cache[0x2000];
 
-    FILE *output;
-    unsigned long int mux_rate = 0;
-    unsigned int video_bound = 0;
-    unsigned int audio_bound = 0;
-    unsigned int audio_ID_start = 0;
-    unsigned long long int SCR_flag;
+    bool output_file_set = false;
+    char *output_file;
+    bool sofdec_style_set = false;
+    char *sofdec_style_file;
+    bool sofdec_version_set = false;
+    unsigned int sofdec_version = 1;
+    bool audio_start_offset_set = false;
+    unsigned int audio_start_offset = 0;
 
-    FILE *inputs[48];
-    char DTS_flag[48] = {0};
-    float DTS_basic[48] = {0};
-    unsigned long long int DTS_forecast[48] = {0};
-    unsigned long long int picture_num_basic[48] = {0};
-    unsigned long long int picture_num_current[48] = {0};
-    unsigned long int picture_num_bigest[48] = {0};
-    unsigned char picture_head[4] = {0x00, 0x00, 0x01, 0x00};
-    unsigned int picture_coding_type;
-    unsigned int temporal_reference;
-    unsigned int read_flag;
-    unsigned int last_picture_start = 0;
-    unsigned long long int PTS_cache;
 
-    unsigned char sofdec_message_block_cache[0x800];
-
-    if (argc < 5)
-        muxer_error(000, 0);
-
-    char *arg;
     int option;
     struct optparse options;
     optparse_init(&options, argv);
-    while ((option = optparse(&options, "A:M:a:ho:s:v:y")) != -1) {
+    while ((option = optparse(&options, ":A:M:Ta:d:ho:s:t:v:x:y")) != -1) {
         switch (option) {
         case 'y':
             default_overwrite_flag = 1;
@@ -111,127 +72,92 @@ int main(int argc, char *argv[])
             break;
         case 'o':
             output_file = options.optarg;
-            output_num++;
+            if (output_file_set) {muxer_error(E__OPT_WRONG_REP, (char* )&options.optopt);} else {output_file_set = true;}
             break;
         case 's':
-            SFD_style_file = options.optarg;
-            SFD_style_num++;
+            sofdec_style_file = options.optarg;
+            if (sofdec_style_set) {muxer_error(E__OPT_WRONG_REP, (char* )&options.optopt);} else {sofdec_style_set = true;}
             break;
         case 'M':
-            sscanf(options.optarg, "%u", &sofdec_version);
-            sofdec_version_num++;
+            sscanf(options.optarg, "%u", &sofdec_version); 
+            if (sofdec_version_set) {muxer_error(E__OPT_WRONG_REP, (char* )&options.optopt);} else {sofdec_version_set = true;}
             break;
         case 'A':
-            sscanf(options.optarg, "%u", &audio_ID_start_offset);
-            audio_ID_start_offset_num++;
+            sscanf(options.optarg, "%u", &audio_start_offset);
+            if (audio_start_offset_set) {muxer_error(E__OPT_WRONG_REP, (char* )&options.optopt);} else {audio_start_offset_set = true;}
             break;
+
+        case 'T':
+        case 't':
+        case 'x':
+            muxer_error(E__TODO, "Multiplex CRITAGS extended data Stream");
+            break;
+        case 'd':
+            muxer_error(E__TODO, "Multiplex with external Sofdec metadata dump");
+            break;
+
         case 'h':
-            muxer_error(000, 0);
+            muxer_error(E__HELP);
+        case ':':
+            muxer_error(E__OPT_NUM, (char* )&options.optopt);
         case '?':
-            muxer_error(001, (char* )&options.optopt);
+            muxer_error(E__OPT_UNKNOWN, (char* )&options.optopt);
         }
     }
     files_num = video_num + audio_num;
 
-    if (video_num == 0)
-        muxer_error(010, 0);
-    if (output_num == 0)
+// TODO: adding check: sofdec_style and other conflict opt
+
+    if (output_file_set == false)
         muxer_error(011, 0);
-    if (output_num > 1)
-        muxer_error(012, 0);
     if (video_num > 16)
         muxer_error(020, 0);
     if (audio_num > 32)
         muxer_error(021, 0);
     if (sofdec_version > 2 || sofdec_version < 1)
         muxer_error(030, 0);
-    if (sofdec_version_num > 1)
-        muxer_error(031, 0);
-    if ((audio_ID_start_offset + audio_num) > 32 )
+    if ((audio_start_offset + audio_num) > 32 )
         muxer_error(032, 0);
-    if (audio_ID_start_offset_num > 1)
-        muxer_error(033, 0);
-    if (SFD_style_num > 1)
-        muxer_error(034, 0);
 
-    //input classification
-    for (i = 0; i < video_num; i++)
-    {
-        input_cache = fopen(video_file[i], "rb");
-        fread(file_style_cache, 1, 0x90, input_cache);
-        if (file_style_cache[0] == 0x00 && file_style_cache[1] == 0x00
-                                        && file_style_cache[2] == 0x01 && file_style_cache[3] == 0xB3)
-        {
-            if (  (file_style_cache[0x0C] == 0x00 && file_style_cache[0x0D] == 0x00 
-                                                  && file_style_cache[0x0E] == 0x01 && file_style_cache[0x0F] == 0xB5)
-               || (file_style_cache[0x4C] == 0x00 && file_style_cache[0x4D] == 0x00 
-                                                  && file_style_cache[0x4E] == 0x01 && file_style_cache[0x4F] == 0xB5)
-               || (file_style_cache[0x8C] == 0x00 && file_style_cache[0x8D] == 0x00 
-                                                  && file_style_cache[0x8E] == 0x01 && file_style_cache[0x8F] == 0xB5)
-               )
-            {
-                m2v_file[m2v_num] = video_file[i];
-                m2v_num++;
-            }
-            else
-            {
-                m1v_file[m1v_num] = video_file[i];
-                m1v_num++;
-            }
-            fclose(input_cache);
-        }
-        else
-            muxer_error(100, video_file[i]);
-    }
-    if (m2v_num > 0)//Now can't mux MPEG-2 Video.
-        muxer_error(901, 0);
-    for (i = 0; i < audio_num; i++)
-    {
-        input_cache = fopen(audio_file[i], "rb");
-        fread(file_style_cache, 1, 0x1800, input_cache);
-        if      (file_style_cache[0] == 0x80 && file_style_cache[1] == 0x00)
-        {
-            if(file_style_cache[0x11A] == 0x28 && file_style_cache[0x11B] == 0x63 && file_style_cache[0x11C] == 0x29
-                                               && file_style_cache[0x11D] == 0x43 && file_style_cache[0x11E] == 0x52
-                                                                                  && file_style_cache[0x11F] == 0x49)
-            {
-                sfa_file[sfa_num] = audio_file[i];
-                sfa_num++;
-            }
-            else
-                muxer_error(111, audio_file[i]);
-        }
-        else if (file_style_cache[0] == 0x0B && file_style_cache[1] == 0x77)
-        {
-            ac3_file[ac3_num] = audio_file[i];
-            ac3_num++;
-        }
-        else if (file_style_cache[0] == 0x41 && file_style_cache[1] == 0x49 
-                                             && file_style_cache[2] == 0x58 && file_style_cache[3] == 0x46)
-        {
-            if (file_style_cache[0x19]   == 0x01 && file_style_cache[0x40]   == 0x03 &&
-                file_style_cache[0x17FA] == 0x28 && file_style_cache[0x17FB] == 0x63 && file_style_cache[0x17FC] == 0x29
-                                                 && file_style_cache[0x17FD] == 0x43 && file_style_cache[0x17FE] == 0x52
-                                                                                     && file_style_cache[0x17FF] == 0x49 &&
-                file_style_cache[0x4C]   == 0x02 && file_style_cache[0x54]   == 0x02 && file_style_cache[0x5C]   == 0x02     )
-            {
-                aix_file[aix_num] = audio_file[i];
-                aix_num++;
-            }
-            else
-                muxer_error(112, audio_file[i]);
-        }
-        else
-            muxer_error(110, audio_file[i]);
-        fclose(input_cache);
-    }
-    if ((sfa_num + aix_num) == 0 && ac3_num > 0)
-        muxer_error(022, 0);
 
-    //If sample Sofdec, read parameter.
-    if (SFD_style_num == 1)
+    int i;
+
+    char audio_stream_start_index = audio_stream_0 + audio_start_offset;
+
+    uint32_t bitrate = 0;
+    uint32_t mux_rate = 0;
+
+ /********input classification********/
+    struct{
+        video_stream_info** video_stream_layer;
+        audio_stream_info** audio_stream_layer;
+    } stream_info;
+    stream_info.video_stream_layer = (video_stream_info**)malloc(video_num * sizeof(void*));
+    stream_info.audio_stream_layer = (audio_stream_info**)malloc(audio_num * sizeof(void*));
+
+    for (i = 0; i < video_num; i++){
+        stream_info.video_stream_layer[i] = (video_stream_info*)malloc(sizeof(video_stream_info));
+        stream_info.video_stream_layer[i]->file_path = video_file[i];
+        stream_info.video_stream_layer[i]->stream_id = video_stream_0 + i;
+        video_format_check(stream_info.video_stream_layer[i]);
+    }
+    for (i = 0; i < audio_num; i++){
+        stream_info.audio_stream_layer[i] = (audio_stream_info*)malloc(sizeof(audio_stream_info));
+        stream_info.audio_stream_layer[i]->file_path = audio_file[i];
+        stream_info.audio_stream_layer[i]->stream_id = audio_stream_start_index + i;
+        audio_format_check(stream_info.audio_stream_layer[i]);
+    }
+
+/*
+    // If sample Sofdec, read parameter.
+    // need rewrite.
+    if (sofdec_style_set == 1)
     {
-        input_cache =  fopen(SFD_style_file, "rb");
+        int j;
+        int video_bound, audio_bound;
+        char file_style_cache[0x2000];
+
+        FILE* input_cache = fopen(sofdec_style_file, "rb");
         fread(file_style_cache, 1, 0x2000, input_cache);
         if(  (file_style_cache[0x00] == 0x00 && file_style_cache[0x01] == 0x00 
                                              && file_style_cache[0x02] == 0x01 && file_style_cache[0x03] == 0xBA)
@@ -254,8 +180,7 @@ int main(int argc, char *argv[])
                     else
                     {
                         audio_bound = j;
-                        audio_ID_start = file_style_cache[(i * 0x800) + 0x18];
-                        audio_ID_start_offset = audio_ID_start - 0xC0;
+                        audio_start_offset = file_style_cache[(i * 0x800) + 0x18] - 0xC0;
                     }
                 }
                 else if(file_style_cache[(i * 0x800) + 0x0F] == 0xBF)
@@ -266,251 +191,171 @@ int main(int argc, char *argv[])
                         i++;
                 }
             }
-            fseek(input_cache, 0x1080, SEEK_SET);
-            fread(sofdec_message_block_cache, 1, 0x780, input_cache);
 
             fclose(input_cache);
         }
         else
-            muxer_error(120, SFD_style_file);
-    if (video_bound != video_num)
-        muxer_error(300, 0);
-    if (audio_bound != audio_num)
-        muxer_error(301, 0);
-    }
-    
-    if (SFD_style_num == 0)
-    {
-        mux_rate++;
-        mux_rate = mux_rate + m1v_num * 0x40F38;
-        mux_rate = mux_rate + ac3_num * 0x471;
-        if (sfa_num != 0)
-            for (i = 0; i < sfa_num; i++)
-            {
-                input_cache = fopen(sfa_file[i], "rb");
-                fread(file_style_cache, 1, 0x20, input_cache);
-                j = sample_rate_read(file_style_cache[0x08], file_style_cache[0x09], file_style_cache[0x0A],
-                                                                                     file_style_cache[0x0B]);
-                k = file_style_cache[0x07];
-                mux_rate = mux_rate + sfa_rate_made(j, k);
-                fclose(input_cache);
-            }
-        if (aix_num != 0)
-            for (i = 0; i < aix_num; i++)
-            {
-                input_cache = fopen(aix_file[i], "rb");
-                fread(file_style_cache, 1, 0x20, input_cache);
-                j = sample_rate_read(file_style_cache[0x48], file_style_cache[0x49], file_style_cache[0x4A],
-                                                                                     file_style_cache[0x4B]);
-                k = file_style_cache[0x4C];
-                mux_rate = mux_rate + (3 * sfa_rate_made(j, k));
-                fclose(input_cache);
-            }
-        if (mux_rate >= 0x3FFFFF)
-            muxer_error(200, 0);
-    }
+            muxer_error(120, sofdec_style_file);
 
-    //calculate DTS basic
-    if (sfa_num != 0)
-        for (i = 0; i < sfa_num; i++)
-        {
-            input_cache = fopen(sfa_file[i], "rb");
-            fread(file_style_cache, 1, 0x20, input_cache);
-            j = sample_rate_read(file_style_cache[0x08], file_style_cache[0x09], file_style_cache[0x0A],
-                                                                                 file_style_cache[0x0B]);
-            k = file_style_cache[0x07];
-            sfa_DTS_basic[i] = (322560000 / (j * k));
-            fclose(input_cache);
-        }
-    if (aix_num != 0)
-        for (i = 0; i < aix_num; i++)
-        {
-            input_cache = fopen(aix_file[i], "rb");
-            fread(file_style_cache, 1, 0x50, input_cache);
-            j = sample_rate_read(file_style_cache[0x48], file_style_cache[0x49], file_style_cache[0x4A],
-                                                                                 file_style_cache[0x4B]);
-            k = file_style_cache[0x4C];
-            aix_DTS_basic[i] = (322560000 / (j * k * 3));
-            fclose(input_cache);
-        }
-    for (i = 0; i < m1v_num; i++)
-    {
-        input_cache = fopen(m1v_file[i], "rb");
-        fread(file_style_cache, 1, 0x10, input_cache);
-        m1v_DTS_basic[i] = DTS_basic_read(file_style_cache[0x07]);
-        fclose(input_cache);
-    }
+        bitrate = 50 * mux_rate;
+
+        if (video_bound != video_num)
+            muxer_error(300, 0);
+        if (audio_bound != audio_num)
+            muxer_error(301, 0);
+    } else
+*/
+    double audio_bitrate_count = 0;
+    for (i = 0; i < audio_num; i++){
+        audio_bitrate_count += ((stream_info.audio_stream_layer[i]->total_bitrate / 8) * (2048.0 / 2016.0));}
+    bitrate = audio_bitrate_count + video_num * 0xCAF8F4;
+    mux_rate = (bitrate + 49) / 50;
+    if (mux_rate >= (2 << 22)){
+        muxer_error(E__EXCEED_INPUT_STREAM_LIMIT);}
+
 
     //overwrite?
-    j = _access(output_file, 00);//for linus, changing for "access(output_file, 00);"
-    if (j == 0 && default_overwrite_flag == 0)
+    if (access(output_file, 00) == 0 && default_overwrite_flag == 0)
         overwrite_question(output_file);
 
-    //write
-    output = fopen(output_file, "wb");
-    SCR_flag = 0;
-    if (audio_num != 0)
-    {
-        pack_head_print(output, SCR_flag, mux_rate);
-        system_head_print(output, mux_rate, 0, audio_num, audio_ID_start_offset);
-        padding_stream_print(output, (0x07E2 - 3 * audio_num));
-        SCR_flag++;
-    }
-    pack_head_print(output, SCR_flag, mux_rate);
-    system_head_print(output, mux_rate, video_num, 0, 0);
-    padding_stream_print(output, (0x07E2 - 3 * video_num));
-    SCR_flag++;
-    pack_head_print(output, SCR_flag, mux_rate);
-    sofdec_stream_message_block(output, sofdec_version);
-    if (SFD_style_num == 1){
-        fwrite(sofdec_message_block_cache, 1, 0x780, output);
-    }
-    else if (aix_num != 0 && sofdec_version == 2)
-    {
-        sofdec_padding_block_print(output, 0x140);
-        sofdec_padding_block_print(output, ((sfa_num + audio_ID_start_offset) * 0x10));
-        char aix_block[0x10] = {0xC0, 0x23, 0x60, 0xBB, 0X80};
-        for (i = 0; i < aix_num; i++)
-        {
-            aix_block[0] = 0xC0 + i + audio_ID_start_offset;
-            input_cache = fopen(aix_file[i], "rb");
-            fread(file_style_cache, 1, 0x50, input_cache);
-            aix_block[3] = file_style_cache[0x4A];
-            aix_block[4] = file_style_cache[0x4B];
-            fwrite(aix_block, 1, 0x10, output);
-        }
-        sofdec_padding_block_print(output, 0x640 - (sfa_num + aix_num + audio_ID_start_offset) * 0x10);
-    }
-    else
-        sofdec_padding_block_print(output, 0x780);
-    SCR_flag++;
 
-    i = 0;
-    j = 0;
-    for (; i < (sfa_num + j); i++)
-    {
-        inputs[i] = fopen(sfa_file[i - j], "rb");
-        DTS_flag[i] = 0x01;
-        DTS_basic[i] = sfa_DTS_basic[i - j];
+/******** build output file ********/
+    char *pack_cache;
+    pack_cache = (char*)malloc(0x800);
+    memset(pack_cache, 0xFF, 0x800);
+    size_t pack_offset = 0;
+    FILE* output = fopen(output_file, "wb");
+    uint32_t pack_index = 0;
+
+    // metadata
+    if (audio_num != 0){
+        pack_offset += mpeg1_pack_header_build(pack_cache, pack_index, bitrate, mux_rate);
+        pack_offset += mpeg1_system_header_build(pack_cache + pack_offset, mux_rate, 0, audio_num, audio_stream_start_index);
+        mpeg1_padding_stream_packet_build(pack_cache + pack_offset, 0x800 - pack_offset);
+        fwrite(pack_cache, 1, 0x800, output);
+        pack_index++;
+        pack_offset = 0;
     }
-    j = i;
-    for (; i < (aix_num + j); i++)
-    {
-        inputs[i] = fopen(aix_file[i - j], "rb");
-        DTS_flag[i] = 0x01;
-        DTS_basic[i] = aix_DTS_basic[i - j];
-    }
-    j = i;
-    for (; i < (ac3_num + j); i++)
-    {
-        inputs[i] = fopen(ac3_file[i - j], "rb");
-        DTS_flag[i] = 0x01;
-        DTS_basic[i] = 0xCA8;
-    }
-    j = i;
-    for (; i < (m1v_num + j); i++)
-    {
-        inputs[i] = fopen(m1v_file[i - j], "rb");
-        DTS_flag[i] = 0x02;
-        DTS_basic[i] = m1v_DTS_basic[i - j];
+    if (video_num != 0){
+        pack_offset += mpeg1_pack_header_build(pack_cache, pack_index, bitrate, mux_rate);
+        pack_offset += mpeg1_system_header_build(pack_cache + pack_offset, mux_rate, 1, video_num, 0);
+        mpeg1_padding_stream_packet_build(pack_cache + pack_offset, 0x800 - pack_offset);
+        fwrite(pack_cache, 1, 0x800, output);
+        pack_index++;
+        pack_offset = 0;
     }
 
-    while (SCR_flag != 0)
-    {
-        //compare DTS found the smallest
-        j = 0;
-        for (i = 1; i < files_num; i++)
-            if (DTS_flag[i] != 0xFF)
-                if (DTS_forecast[j] > DTS_forecast[i])
-                    j = i;
-        if (DTS_flag[j] == 0x01)
-        {
-            k = fread(file_style_cache, 1, 0x7E0, inputs[j]);
-            if (k == 0)
-            {
-                DTS_flag[j] = 0xFF;
-                DTS_forecast[j] = 0xFFFFFFFFF;
-            }
-            else
-            {
-                pack_head_print(output, SCR_flag, mux_rate);
-                packet_head_print(output, (0xC0 + j + audio_ID_start_offset), (k + 0x07), 0, 0, 0x04, 0, DTS_forecast[j], 0);
-                fwrite(file_style_cache, 1, k, output);
-                padding_stream_print(output, 0x07E1 - k);
-                DTS_forecast[j] = DTS_forecast[j] + DTS_basic[j]; //renewal DTS
-                if (DTS_forecast[j] > 0x1FFFFFFFF)
-                    muxer_error(202, 0);
-                if (k < 0x7E0)
-                {
-                    DTS_flag[j] = 0xFF;
-                    DTS_forecast[j] = 0xFFFFFFFFF;
-                }
-                SCR_flag++;
-            }
-        }
-        else if (DTS_flag[j] == 0x02)
-        {
-            read_flag = 0;
-            while (read_flag == 0)
-            {
-                k = fread(file_style_cache, 1, 0x7E2, inputs[j]);
-                l = memsearch(file_style_cache, k, 0, picture_head, 4);
-                if (k == 0)
-                {
-                    read_flag = 1;
-                    DTS_flag[j] = 0xFF;
-                    DTS_forecast[j] = 0xFFFFFFFFF;
-                }
-                else
-                {
-                    pack_head_print(output, SCR_flag, mux_rate);
-                    if (l == -1 || l >= 0x7DA) //no picture_head
-                        packet_head_print(output, (0xE0 + j - audio_num), (k + 0x0C), 0, 1, 0x2E, 4, 0, 0);
-                    else
-                    {
-                        picture_coding_type = picture_coding_type_read(file_style_cache[l + 5]);
-                        temporal_reference = temporal_reference_read(file_style_cache[l + 4], file_style_cache[l + 5]);
-                        PTS_cache = ((picture_num_basic[j]) + temporal_reference) * DTS_basic[j];
-                        if (picture_coding_type == 0x01 || picture_coding_type == 0x02)
-                            packet_head_print(output, (0xE0 + j - audio_num), (k + 0x0C), 0, 1, 0x2E, 1, PTS_cache, DTS_forecast[j]);
-                        if (picture_coding_type == 0x03)
-                            packet_head_print(output, (0xE0 + j - audio_num), (k + 0x0C), 0, 1, 0x2E, 3, PTS_cache, DTS_forecast[j]);
-                        read_flag = 1;
-                        while (l != -1)//renewal DTS
-                        {
-                            last_picture_start = l;
-                            picture_num_current[j]++;
-                            temporal_reference = temporal_reference_read(file_style_cache[l + 4], file_style_cache[l + 5]);
-                            if (picture_num_bigest[j] < temporal_reference)
-                                picture_num_bigest[j] = temporal_reference;
-                            if (temporal_reference == 0)
-                            {
-                                picture_num_basic[j] = picture_num_basic[j] + picture_num_bigest[j] + 1;
-                                picture_num_current[j] = picture_num_basic[j];
-                            }
-                            DTS_forecast[j] = DTS_basic[j] * picture_num_current[j];
-                            l = memsearch((file_style_cache + last_picture_start + 1), k, 0, picture_head, 4);
-                        }
-                        last_picture_start = 0;
-                    }
-                    fwrite(file_style_cache, 1, k, output);
-                    if (k < 0x7E2)
-                    {
-                        DTS_flag[j] = 0xFF;
-                        DTS_forecast[j] = 0xFFFFFFFFF;
-                        if (0x7DC - k > 0)
-                            padding_stream_print(output, 0x07DC - k);
-                        else
-                            reserved_byte(output, 0x07E2 - k);
-                    }
-                    SCR_flag++;
-                }
-            }
-        }
-        else
-            SCR_flag = 0;//End loop
+    pack_offset += mpeg1_pack_header_build(pack_cache, pack_index, bitrate, mux_rate);
+// TODO: embed new Sofdec info pack build func
+    mpeg1_padding_stream_packet_build(pack_cache + pack_offset, 0x800 - pack_offset);
+    fwrite(pack_cache, 1, 0x800, output);
+    pack_index++;
+    pack_offset = 0;
+    pack_offset += mpeg1_pack_header_build(pack_cache, pack_index, bitrate, mux_rate);
+// TODO: CRITAGS stream
+    mpeg1_padding_stream_packet_build(pack_cache + pack_offset, 0x800 - pack_offset);
+    fwrite(pack_cache, 1, 0x800, output);
+    pack_index++;
+    pack_offset = 0;
+
+    // audio && video stream
+    FILE* input_audio[32];
+    for (i = 0; i < audio_num; i++){
+        input_audio[i] = fopen(stream_info.audio_stream_layer[i]->file_path, "rb");
     }
-    sofdec_ending_block_print(output);
+    FILE* input_video[16];
+    uint32_t frame_decode_index[16] = {0};
+    video_frame_info* frame_info[16];
+    for (i = 0; i < video_num; i++){
+        input_video[i] = fopen(stream_info.video_stream_layer[i]->file_path, "rb");
+        frame_decode_index[i] = 0;
+        frame_info[i] = (video_frame_info*)stream_info.video_stream_layer[i]->frame_map;
+    }
+
+    size_t subpack_count[48] = {0};
+    size_t next_subpack_DTS[48] = {0};
+    bool   stream_end[48] = {0};
+
+    int next_input = 0;
+    int read_size = 0;
+    int end_stream = 0;
+    while (end_stream != files_num){
+        next_input = 0;
+        for (i = 0; i < files_num; i++){
+            if (stream_end[i] == false && next_subpack_DTS[next_input] > next_subpack_DTS[i]){
+                next_input = i;}}
+        subpack_count[next_input]++;
+        if (next_input < audio_num){
+            mpeg1_pack_header_build(pack_cache, pack_index, bitrate, mux_rate);
+            read_size = fread(pack_cache + 12 + 13, 1, 0x7E0, input_audio[next_input]);
+            if (read_size < 0x7E0){
+                stream_end[next_input] = true;
+                end_stream++;
+            }
+            if (read_size == 0){
+                continue;
+            }
+            mpeg1_packet_header_build(pack_cache + 12, stream_info.audio_stream_layer[next_input]->stream_id, read_size + 13, next_subpack_DTS[next_input], 0);
+            mpeg1_padding_stream_packet_build(pack_cache + 12 + 13 + read_size, 0x800 - 12 - 13 - read_size);
+            fwrite(pack_cache, 1, 0x800, output);
+
+            next_subpack_DTS[next_input] = subpack_count[next_input] * round(system_clock_frequency * 2016 / (stream_info.audio_stream_layer[next_input]->total_bitrate / 8) ) ;
+        } else {
+            next_input -= audio_num;
+            mpeg1_pack_header_build(pack_cache, pack_index, bitrate, mux_rate);
+            read_size = fread(pack_cache + 12 + 18, 1, 0x7E2, input_video[next_input]);
+            if (read_size < 0x7E2){
+                stream_end[next_input + audio_num] = true;
+                end_stream++;
+            }
+            if (read_size == 0){
+                continue;
+            }
+// 如果当前帧的下一帧没有在这个块开始的话
+// 则这里什么都不更新
+            if (frame_info[next_input]->next_frame == NULL ||
+                frame_info[next_input]->next_frame->offset > (subpack_count[next_input + audio_num] * 0x7E2)){
+                mpeg1_packet_header_build(pack_cache + 12, stream_info.video_stream_layer[next_input]->stream_id, read_size + 18, 0, 0);
+                fwrite(pack_cache, 1, 0x800, output);
+            } else {
+                size_t this_DTS = round(system_clock_frequency * ((frame_decode_index[next_input] + 1)              / picture_rate[stream_info.video_stream_layer[next_input]->frame_rate]) );
+                size_t this_PTS = round(system_clock_frequency * (frame_info[next_input]->next_frame->present_index / picture_rate[stream_info.video_stream_layer[next_input]->frame_rate]) );
+                if (frame_info[next_input]->next_frame->type == I_frame || frame_info[next_input]->next_frame->type == P_frame){
+                    mpeg1_packet_header_build(pack_cache + 12, stream_info.video_stream_layer[next_input]->stream_id, read_size + 18, this_PTS, this_DTS);
+                } else if (frame_info[next_input]->next_frame->type == B_frame){
+                    mpeg1_packet_header_build(pack_cache + 12, stream_info.video_stream_layer[next_input]->stream_id, read_size + 18, this_PTS, 0);
+                } else {
+                    muxer_error(E__UNSUPPORTED_VIDEO_FORMAT, stream_info.video_stream_layer[next_input]->file_path);}
+                fwrite(pack_cache, 1, 0x800, output);
+
+                do {
+                    if (frame_info[next_input]->next_frame == NULL ||
+                        frame_info[next_input]->next_frame->offset > subpack_count[next_input + audio_num] * 0x7E2){
+                        next_subpack_DTS[next_input + audio_num] = round(system_clock_frequency * frame_decode_index[next_input] / picture_rate[stream_info.video_stream_layer[next_input]->frame_rate] );
+                        break;
+                    }
+                    frame_info[next_input] = frame_info[next_input]->next_frame;
+                    frame_decode_index[next_input]++;
+                } while (1);
+            }
+    
+
+            if (read_size <= 0x7DB) {
+                mpeg1_padding_stream_packet_build(pack_cache + 12 + 18 + read_size, 0x800 - 12 - 18 - read_size);
+            } else if (read_size < 0x7E1){
+                memmove(pack_cache + 12 + 6 + (read_size - 0x7DB), pack_cache + 12 + 6, read_size + 12);
+                memset(pack_cache + 12 + 6, 0xFF, read_size - 0x7DB);
+            }
+            next_input += audio_num;
+        }
+        pack_index++;
+        pack_offset = 0;
+        if (next_subpack_DTS[next_input] >= MAX_ENC_VALUE){
+            muxer_error(E__EXCEED_REPLY_TIME_LIMIT);}
+    }
+    mpeg1_end_block_build(pack_cache);
+    fwrite(pack_cache, 1, 0x800, output);
+
     printf("\nMux complete.\n");
     return 0;
 }
