@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2021 Nebulas Astra <https://github.com/nebulas-star>
+// SPDX-FileCopyrightText: 2021-2026 Nebulas Astra <https://github.com/nebulas-star>
 // SPDX-License-Identifier: MIT
 
 #ifndef __MUXER_ERROR_REPORT__
@@ -19,13 +19,11 @@
 #define     E__UNSUPPORTED_VIDEO_FORMAT     0x80001001      // 不支持的视频格式
 #define     E__UNSUPPORTED_AUDIO_FORMAT     0x80001002      // 不支持的音频格式
 
-#define     E__NOT_CONFORM_MPEG             0x80001100      // 不合法的MPEG视频流
-
-#define     E__NOT_CONFORM_ADX              0x80001200      // 不合法的ADX：使用了未知的音频编码器
-#define     E__NOT_CONFORM_SFA              0x80001201      // 不符合SFA约束的ADX输入
-#define     E__NOT_CONFORM_A52              0x80001202      // 不合法的AC-3
-#define     E__NOT_CONFORM_AHX              0x80001203      // 不合法的AHX
-#define     E__NOT_CONFORM_AIX              0x80001204      // 不合法的AIX
+#define     E__NOT_CONFORM_ADX              0x80001100      // 不合法的ADX：使用了未知的音频编码器
+#define     E__NOT_CONFORM_SFA              0x80001101      // 不符合SFA约束的ADX输入
+#define     E__NOT_CONFORM_A52              0x80001102      // 不合法的AC-3
+#define     E__NOT_CONFORM_AHX              0x80001103      // 不合法的AHX
+#define     E__NOT_CONFORM_AIX              0x80001104      // 不合法的AIX
 
 #define     E__EXCEED_INPUT_STREAM_LIMIT    0x80002001      // 输入流数量超限，包括数据速率过大/视频超16/音频超32/超出sfd记述能力
 #define     E__EXCEED_REPLY_TIME_LIMIT      0x80002002      // 时长超限，包括参考时钟/DTS/PTS爆表
@@ -54,7 +52,6 @@ void muxer_error(size_t error_code, ...)
             printf("    -A:   audio stream id offset. when need leave in blank first x audio stream, use this option with argument x.");
             printf("\n");
             break;
-//  -d:   sofdec文件元数据转储，由sfd_info给出
 //  -t:   *.tag输入
 //  -x:   *.sfx输入
 //  -T:   若无输入则添加一个占位流，以符合原始Sofdec Multiplexer行为
@@ -70,75 +67,42 @@ void muxer_error(size_t error_code, ...)
             char* rep_opt = va_arg(args, char*);
             printf("[ERROR] The non-reusable option \"%s\" has been used multiple times.", rep_opt);
             break;
+        case E__OPT_NON_NESSARY:
+            char* ness_opt = va_arg(args, char*);
+            printf("[ERROR] The necessary option \"%s\" is missing.", ness_opt);
+            break;
         case E__UNSUPPORTED_VIDEO_FORMAT:
             char* unsp_vfile = va_arg(args, char*);
-            printf("[ERROR] The specified video stream \"%s\" is not an MPEG-1/2 video stream.", unsp_vfile);
+            printf("[ERROR] The specified video stream \"%s\" is not MPEG-1/2 video format.", unsp_vfile);
+            break;
+        case E__UNSUPPORTED_AUDIO_FORMAT:
+            char* unsp_afile = va_arg(args, char*);
+            printf("[ERROR] The specified audio stream \"%s\" is not supported audio format.", unsp_afile);
+            break;
+        case E__NOT_CONFORM_ADX:
+            char* ncadx = va_arg(args, char*);
+            printf("[ERROR] The specified CRI ADX stream \"%s\" used unsupported audio encoder.", ncadx);
+            break;
+        case E__NOT_CONFORM_SFA:
+            char* ncsfa = va_arg(args, char*);
+            printf("[ERROR] The specified CRI ADX stream \"%s\" does not meet the requirements of Sofdec Audio.", ncsfa);
+            break;
+        case E__NOT_CONFORM_A52:
+            char* nca52 = va_arg(args, char*);
+            printf("[ERROR] The specified audio stream \"%s\" is not standard AC-3 audio format.", nca52);
+            break;
+//        case E__NOT_CONFORM_AHX:
+//            break;
+        case E__NOT_CONFORM_AIX:
+            char* ncaix = va_arg(args, char*);
+            printf("[ERROR] The specified audio stream \"%s\" is not standard CRI AIX format, or have more than one segment.", ncaix);
+            break;
+        case E__EXCEED_INPUT_STREAM_LIMIT:
+            printf("[ERROR] Input stream is too large, and exceeds the capacity of the container to record.");
             break;
         case E__EXCEED_REPLY_TIME_LIMIT:
             printf("[ERROR] Input stream is too long, and the maximum length of the DTS/PTS field exceeds the container constraint.");
             break;
-
-/*
-        case 011:
-            printf("ERROR 011: No output file specified.");
-            break;
-        case 012:
-            printf("ERROR 012: Multiple output files were specified.");
-            break;
-        case 020:
-            printf("ERROR 020: The number of input video streams exceeds the upper limit of the container.");
-            break;
-        case 021:
-            printf("ERROR 021: The number of input audio streams exceeds the upper limit of the container.");
-            break;
-        case 022:
-            printf("ERROR 022: No SFA/AIX stream input is specified, but AC-3(Dolby Digital) stream input is specified.");
-            break;
-        case 030:
-            printf("ERROR 030: The specified Sofdec stream version does not meet the constraints.");
-            break;
-        case 032:
-            printf("ERROR 032: The specified start offset value of the audio stream does not meet the constraints.");
-            break;
-        case 110:
-            char* error_file = va_arg(args, char*);
-            printf("ERROR 110: The specified audio stream \"%s\" is not an SFA/AIX/AC-3 audio stream.", error_file);
-            break;
-        case 111:
-            char* error_file = va_arg(args, char*);
-            printf("ERROR 111: The specified SFA stream \"%s\" isn't conformed to constraint conditions.", error_file);
-            break;
-        case 112:
-            char* error_file = va_arg(args, char*);
-            printf("ERROR 112: The specified AIX stream \"%s\" isn't conformed to constraint conditions.", error_file);
-            break;
-        case 120:
-            char* error_file = va_arg(args, char*);
-            printf("ERROR 120: The specified sample Sofdec file \"%s\" isn't conformed to constraint conditions.", error_file);
-            break;
-        case 200:
-            printf("ERROR 200: Too many input streams, and the length of the mux_rate field exceeds the container constraint.");
-            break;
-        case 201:
-            printf("ERROR 201: Too many input streams, and the maximum length of the system_lock_reference field exceeds the container constraint.");
-            break;
-        case 300:
-            printf("ERROR 300: The number of input video streams is different from the number of video streams in the sample Sofdec file.");
-            break;
-        case 301:
-            printf("ERROR 301: The number of input audio streams is different from the number of audio streams in the sample Sofdec file.");
-            break;
-        case 900:
-            printf("ERROR 900: This feature has not yet been implemented.");
-            break;
-        case 901:
-            printf("ERROR 901: The function of muxing MPEG-2 video streams has not yet been implemented.");
-            break;
-        case 903:
-            printf("ERROR 903: The parameters of the SFA audio stream are not in the predetermined parameter table.");
-            break;
-
-*/
         case E__TODO:
             char* todo_function = va_arg(args, char*);
             printf("[ERROR] Function \"%s\" has not yet been implemented.", todo_function);
