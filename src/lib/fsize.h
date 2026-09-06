@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 Nebulas Astra <https://github.com/nebulas-star>
+// SPDX-FileCopyrightText: 2025-2026 Nebulas Astra <https://github.com/nebulas-star>
 // SPDX-License-Identifier: MIT
 
 #ifndef __FSIZE_LIB__
@@ -13,6 +13,13 @@ size_t fsize(FILE *fp){
     fseek(fp, 0, SEEK_END);
     n = ftell(fp);
     fsetpos(fp, &fpos);      //复位
+    return n;
+}
+
+size_t fsize_d(char *fp){
+    FILE *file = fopen(fp, "rb");
+    size_t n = fsize(file);
+    fclose(file);
     return n;
 }
 

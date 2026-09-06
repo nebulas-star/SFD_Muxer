@@ -23,6 +23,7 @@ static uint32_t memread_u32be(uint8_t* src){
     return dst;
 }
 
+#include "sofdec_metadata_builder.h"
 #include "muxer_error_report.h"
 
 // ATSC A/52 (AC-3) 5.4.4.1 Table 5.18
@@ -50,68 +51,6 @@ typedef struct video_frame_info {
     
     struct video_frame_info* next_frame;
 } video_frame_info;
-
-
-/** Copy from sofdec metadata builder**/
-enum video_codec {
-    CRI_SOFDEC_VIDEO,   // Sofdec/Video     *.sfv   // unused in this version
-    MPEG1_VIDEO,        // MPEG1/Video      *.m1v
-    MPEG_VIDEO,         // MPEG/Video       *.mpv   // Deprecated?
-    MPEG2_VIDEO         // MPEG2/Video      *.m2v
-};
-enum audio_codec {
-    CRI_SOFDEC_AUDIO,   // Sofdec/Audio     *.sfd
-    MPEG_AUDIO,         // MPEG/Audio               // Deprecated, may support in early dev version?
-    DOBLY_DIGITAL,      // Dobly Digital    *.ac3
-    CRI_AHX,            // AHX              *.ahx
-    CRI_AIX             // AIX              *.aix
-};
-
-typedef struct{
-    char* file_path;
-
-    uint8_t     stream_id;
-    uint8_t     codec_type;
-    uint16_t    frame_width;
-    uint16_t    frame_hight;
-    uint8_t     frame_rate;
-
-// for calculate playback time
-    uint32_t    total_frames_count;
-// for caculate DTS and PTS
-    void*       frame_map;
-// for cacilate average bitrate for metadata v2
-    uint32_t    file_size;
-
-// only use in "Sofdec Craft" output
-    uint8_t  YUV_Conversion_mode;
-    uint8_t  picture_type;
-    bool     fixed_bitrate_flag;
-    bool     fixed_SHC_flag;
-    uint8_t  advanced_feature;
-    uint8_t  FX_type;
-    uint8_t  GOP_N;
-    uint8_t  GOP_M;
-} video_stream_info;
-typedef struct{
-    char* file_path;
-
-    uint8_t     stream_id;
-    uint8_t     codec_type;
-    uint8_t     mepg_audio_layer;  // Deprecated
-    uint8_t     audio_channels;
-    uint32_t    audio_sample_rate; // Hz
-
-// for calculate playback time
-    uint32_t    total_sample_count;
-
-// for metadata v2
-    uint8_t     subaudio_channel_count;
-    uint8_t     subaudio_streams_count;
-    uint32_t    total_bitrate;
-} audio_stream_info;
-/** Copy from sofdec metadata builder**/
-
 
 #define STREAM_BUFFER_SIZE 0x1000000     //16 MiB
 
@@ -214,7 +153,7 @@ void video_format_check(video_stream_info* stream_info){
 
     // ISO/IEC 13818-2 (MPEG-2 Video) 6.3.1 Figure 6-15
     uint8_t extension_start_code[4] = {0x00, 0x00, 0x01, 0xB5};
-    if (memcmp(format_cache + extension_data_offset, extension_start_code, 4)){                                      
+    if (!memcmp(format_cache + extension_data_offset, extension_start_code, 4)){                                      
         stream_info->codec_type = MPEG2_VIDEO; 
     } else {
         stream_info->codec_type = MPEG1_VIDEO;}
