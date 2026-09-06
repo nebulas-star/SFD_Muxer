@@ -108,7 +108,7 @@ void muxer_error(size_t error_code, ...)
             printf("[ERROR] Function \"%s\" has not yet been implemented.", todo_function);
             break;
         default:
-            printf("[ERROR] Internal error: 0x%08llx.", error_code, error_code);
+            printf("[ERROR] Internal error: 0x%08llx.", error_code);
     }
     va_end(args);
 

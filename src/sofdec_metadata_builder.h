@@ -211,7 +211,7 @@ void video_stream_metadata_v1_build(char* metadata_block, video_stream_info stre
     memmove_u8le (metadata_block + 0x1A, 0xFF);
     memmove_u8le (metadata_block + 0x1B, 0xFF);
 
-    uint32_t frame_info = ((stream_info.frame_width & 0xFFF) << 20) | ((stream_info.frame_hight & 0xFFF) << 8) | (stream_info.frame_rate) & 0xFF;
+    uint32_t frame_info = ((stream_info.frame_width & 0xFFF) << 20) | ((stream_info.frame_hight & 0xFFF) << 8) | (stream_info.frame_rate & 0xFF);
     memmove_u32be(metadata_block + 0x1C, frame_info);
 
     // "Sofdec Craft" output extend metadata byte ignore

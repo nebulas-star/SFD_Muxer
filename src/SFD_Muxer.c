@@ -267,7 +267,6 @@ int main(int argc, char *argv[])
                 } while (1);
             }
             if (read_size <= 0x7DB) {
-                printf("%d", read_size);
                 mpeg1_padding_stream_packet_build(pack_cache + 12 + 18 + read_size, 0x800 - (12 + 18 + read_size));
             } else if (read_size < 0x7E1){
                 memmove(pack_cache + 12 + 6 + (read_size - 0x7DB), pack_cache + 12 + 6, read_size + 12);
