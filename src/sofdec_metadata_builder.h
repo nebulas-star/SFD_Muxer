@@ -48,7 +48,7 @@ static void memmove_u32be(char* str1, uint32_t str2) {
 
 #include "mpeg1_pack_builder.h"
 
-#define MUXER_INFO_STRING   "SFD_Muxer Ver.0.5.0 by Nebulas"
+#define MUXER_INFO_STRING   "SFD_Muxer Ver.0.5.1 by Nebulas"
 #define SFD_MUX_LIB_INTER_MAJOR_VERSION 0x02    // 0x02 for all known offical lib 
 #define SFD_MUX_LIB_INTER_MINOR_VERSION 0xFF
 

@@ -221,7 +221,7 @@ void audio_format_check(audio_stream_info* stream_info){
         
         fseek(input_audio, frame_size, SEEK_SET);
         fread(format_cache + 8, 1, 2, input_audio);
-        if (memcmp(format_cache, cri_adx_file_signatures, 2)){
+        if (memcmp(format_cache, a52_syncinfo_syncword, 2)){
             muxer_error(E__NOT_CONFORM_A52, stream_info->file_path);
         }
         size_t file_size = fsize(input_audio);                              // ATSC A/52 (AC-3) 5.1: 6 coded audio blocks per frame, 256 new audio samples per channel
