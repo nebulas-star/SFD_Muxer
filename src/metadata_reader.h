@@ -216,7 +216,7 @@ void audio_format_check(audio_stream_info* stream_info){
         if (a52_syncinfo_frmsizecod >= 38){
             muxer_error(E__NOT_CONFORM_A52, stream_info->file_path);
         }
-        stream_info->total_bitrate = a52_frmsizecod_bitrate[a52_syncinfo_frmsizecod];
+        stream_info->total_bitrate = a52_frmsizecod_bitrate[a52_syncinfo_frmsizecod] * 1000;
         frame_size = 2 * a52_frame_size_code_table[a52_syncinfo_fscode][a52_syncinfo_frmsizecod];
         
         fseek(input_audio, frame_size, SEEK_SET);

@@ -215,8 +215,14 @@ int main(int argc, char *argv[])
     while (end_stream != stream_info.total_stream_num){
         next_input = 0;
         for (i = 0; i < stream_info.total_stream_num; i++){
-            if (stream_end[i] == false && next_subpack_DTS[next_input] > next_subpack_DTS[i]){
-                next_input = i;}}
+            if (stream_end[i] != true){
+                if (next_subpack_DTS[next_input] > next_subpack_DTS[i]){
+                    next_input = i;
+                }
+            }
+        }
+        if (next_input == 0){
+        }
         subpack_count[next_input]++;
         if (next_input < stream_info.audio_stream_num){
             mpeg1_pack_header_build(pack_cache, pack_index, stream_info.bitrate_of_system_stream, mux_rate);
@@ -275,9 +281,12 @@ int main(int argc, char *argv[])
             fwrite(pack_cache, 1, 0x800, output);
             next_input += stream_info.audio_stream_num;
         }
+        if (stream_end[next_input] == true){
+            next_subpack_DTS[next_input] = MAX_ENC_VALUE;
+        }
         pack_index++;
         pack_offset = 0;
-        if (next_subpack_DTS[next_input] >= MAX_ENC_VALUE){
+        if (next_subpack_DTS[next_input] > MAX_ENC_VALUE){
             muxer_error(E__EXCEED_REPLY_TIME_LIMIT);}
     }
     mpeg1_end_block_build(pack_cache);

@@ -11,7 +11,7 @@
 
 #include "muxer_error_report.h"
 
-#define MAX_ENC_VALUE 0x200000000   // 2^33
+#define MAX_ENC_VALUE 0x200000000 - 1   // 2^33
 
 // ISO/IEC 11172-1 (MPEG-1 System) 2.4.2
 #define system_clock_frequency 90000.0
@@ -107,7 +107,7 @@ size_t mpeg1_pack_header_build(char* metadata_block, size_t pack_index, size_t b
     memmove(metadata_block, pack_start_code, 4);
 
     size_t system_clock_reference = round(system_clock_frequency * (pack_index * 0x800 + 9) / bitrate);
-    if (system_clock_reference >= MAX_ENC_VALUE){
+    if (system_clock_reference > MAX_ENC_VALUE){
         muxer_error(E__EXCEED_REPLY_TIME_LIMIT);}
     uint8_t pack_header_data[8] = {0};
     

@@ -1,6 +1,11 @@
 *.exe
 /.vscode/
 *.sfd
-*.sfa
 *.m1v
 *.mpg
+*.m2v
+*.sfa
+*.adx
+*.ac3
+*.aix
+*.txt
