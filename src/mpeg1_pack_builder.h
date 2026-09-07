@@ -152,7 +152,9 @@ size_t mpeg1_system_header_build(char* metadata_block, size_t rate_bound, bool i
         stream_info[2] = 0x04;
     }
     for (int i = 0; i < stream_num; i++){
-        memmove(metadata_block + 12 + i * 3, stream_info, 3);}
+        stream_info[0] += i;
+        memmove(metadata_block + 12 + i * 3, stream_info, 3);
+    }
 
     return 12 + 3 * stream_num;
 }
